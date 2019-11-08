@@ -54,48 +54,48 @@ class Game extends React.Component {
       ],
       upgradeArray: [
         {
-          name: "Gold Doubler",
-          cost: 100,
+          name: "Gold Booster",
+          cost: 1000,
           affects: "Gold",
           affectsIndex: 0,
           bought: false,
-          value: 2,
+          value: 1.25,
           visible: true
         },
         {
-          name: "Peasant Doubler",
-          cost: 500,
+          name: "Peasant Booster",
+          cost: 5000,
           affects: "Peasants",
           affectsIndex: 1,
           bought: false,
-          value: 2,
+          value: 1.25,
           visible: true
         },
         {
-          name: "Farmer Doubler",
-          cost: 1500,
+          name: "Farmer Booster",
+          cost: 15000,
           affects: "Farmer",
           affectsIndex: 2,
           bought: false,
-          value: 2,
+          value: 1.25,
           visible: true
         },
         {
-          name: "Blacksmith Doubler",
-          cost: 5000,
+          name: "Blacksmith Booster",
+          cost: 50000,
           affects: "Blacksmiths",
           affectsIndex: 3,
           bought: false,
-          value: 2,
+          value: 1.25,
           visible: true
         },
         {
-          name: "Knight Doubler",
+          name: "Knight Booster",
           cost: 10000,
           affects: "Knights",
           affectsIndex: 4,
           bought: false,
-          value: 2,
+          value: 1.25,
           visible: true
         }
       ]
@@ -209,6 +209,7 @@ class Game extends React.Component {
             <div className={clickElement.name} key={clickElement.name}>
               {clickElement.unlocked && (
                 <button
+                  className="button"
                   id={clickElement.name}
                   onClick={() => this.buyClicker(index, 1)}
                 >
@@ -229,19 +230,21 @@ class Game extends React.Component {
             </div>
           ))}
         </div>
-        <div className="upgrades" />
-        {this.state.upgradeArray.map((upgradeElement, index) => (
-          <div className={upgradeElement.name} key={upgradeElement.name}>
-            {upgradeElement.visible && (
-              <button
-                id={upgradeElement.name}
-                onClick={() => this.buyUpgrade(index)}
-              >
-                {upgradeElement.name}: {upgradeElement.cost} Gold
-              </button>
-            )}
-          </div>
-        ))}
+        <div className="upgrades">
+          {this.state.upgradeArray.map((upgradeElement, index) => (
+            <div className={upgradeElement.name} key={upgradeElement.name}>
+              {upgradeElement.visible && (
+                <button
+                  className="button"
+                  id={upgradeElement.name}
+                  onClick={() => this.buyUpgrade(index)}
+                >
+                  {upgradeElement.name}: {upgradeElement.cost} Gold
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
