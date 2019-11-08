@@ -48,7 +48,34 @@ class Game extends React.Component {
           unlocked: false,
           cost: 60,
           incrementBy: 0.15,
-          unlockNext: 75,
+          unlockNext: 200,
+          upgradeMultiplier: 1
+        },
+        {
+          name: "Baron",
+          total: 0,
+          unlocked: false,
+          cost: 200,
+          incrementBy: 0.1,
+          unlockNext: 1000,
+          upgradeMultiplier: 1
+        },
+        {
+          name: "Earl",
+          total: 0,
+          unlocked: false,
+          cost: 1000,
+          incrementBy: 0.1,
+          unlockNext: 10000,
+          upgradeMultiplier: 1
+        },
+        {
+          name: "Count",
+          total: 0,
+          unlocked: false,
+          cost: 10000,
+          incrementBy: 0.1,
+          unlockNext: 100000,
           upgradeMultiplier: 1
         }
       ],
@@ -59,7 +86,7 @@ class Game extends React.Component {
           affects: "Gold",
           affectsIndex: 0,
           bought: false,
-          value: 1.25,
+          value: 0.25,
           visible: true
         },
         {
@@ -68,7 +95,7 @@ class Game extends React.Component {
           affects: "Peasants",
           affectsIndex: 1,
           bought: false,
-          value: 1.25,
+          value: 0.25,
           visible: true
         },
         {
@@ -77,7 +104,7 @@ class Game extends React.Component {
           affects: "Farmer",
           affectsIndex: 2,
           bought: false,
-          value: 1.25,
+          value: 0.25,
           visible: true
         },
         {
@@ -86,16 +113,16 @@ class Game extends React.Component {
           affects: "Blacksmiths",
           affectsIndex: 3,
           bought: false,
-          value: 1.25,
+          value: 0.25,
           visible: true
         },
         {
           name: "Knight Booster",
-          cost: 10000,
+          cost: 100000,
           affects: "Knights",
           affectsIndex: 4,
           bought: false,
-          value: 1.25,
+          value: 0.25,
           visible: true
         }
       ]
