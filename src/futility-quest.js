@@ -94,6 +94,7 @@ class Game extends React.Component {
           cost: 1000,
           affects: "Gold",
           affectsIndex: 0,
+          type: "booster",
           bought: false,
           value: 0.25,
           visible: false
@@ -103,6 +104,7 @@ class Game extends React.Component {
           cost: 5000,
           affects: "Peasants",
           affectsIndex: 1,
+          type: "booster",
           bought: false,
           value: 0.25,
           visible: false
@@ -112,6 +114,7 @@ class Game extends React.Component {
           cost: 15000,
           affects: "Farmer",
           affectsIndex: 2,
+          type: "booster",
           bought: false,
           value: 0.25,
           visible: false
@@ -121,6 +124,7 @@ class Game extends React.Component {
           cost: 50000,
           affects: "Blacksmiths",
           affectsIndex: 3,
+          type: "booster",
           bought: false,
           value: 0.25,
           visible: false
@@ -130,6 +134,37 @@ class Game extends React.Component {
           cost: 100000,
           affects: "Knights",
           affectsIndex: 4,
+          type: "booster",
+          bought: false,
+          value: 0.25,
+          visible: false
+        },
+        {
+          name: "Baron Booster",
+          cost: 10000000,
+          affects: "Barons",
+          affectsIndex: 5,
+          type: "booster",
+          bought: false,
+          value: 0.25,
+          visible: false
+        },
+        {
+          name: "Earl Booster",
+          cost: 100000000,
+          affects: "Earls",
+          affectsIndex: 6,
+          type: "booster",
+          bought: false,
+          value: 0.25,
+          visible: false
+        },
+        {
+          name: "Count Booster",
+          cost: 10000000000,
+          affects: "Counts",
+          affectsIndex: 7,
+          type: "booster",
           bought: false,
           value: 0.25,
           visible: false
