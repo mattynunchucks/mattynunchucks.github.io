@@ -20,7 +20,7 @@ class Game extends React.Component {
         {
           name: "Peasants",
           total: 0,
-          unlocked: false,
+          unlocked: true,
           cost: 15,
           costs: "Gold",
           incrementBy: 0.4,
@@ -96,7 +96,7 @@ class Game extends React.Component {
           affectsIndex: 0,
           bought: false,
           value: 0.25,
-          visible: true
+          visible: false
         },
         {
           name: "Peasant Booster",
@@ -105,7 +105,7 @@ class Game extends React.Component {
           affectsIndex: 1,
           bought: false,
           value: 0.25,
-          visible: true
+          visible: false
         },
         {
           name: "Farmer Booster",
@@ -114,7 +114,7 @@ class Game extends React.Component {
           affectsIndex: 2,
           bought: false,
           value: 0.25,
-          visible: true
+          visible: false
         },
         {
           name: "Blacksmith Booster",
@@ -123,7 +123,7 @@ class Game extends React.Component {
           affectsIndex: 3,
           bought: false,
           value: 0.25,
-          visible: true
+          visible: false
         },
         {
           name: "Knight Booster",
@@ -132,7 +132,7 @@ class Game extends React.Component {
           affectsIndex: 4,
           bought: false,
           value: 0.25,
-          visible: true
+          visible: false
         }
       ]
     };
@@ -164,6 +164,7 @@ class Game extends React.Component {
         });
       }
     });
+    this.checkForUnlocks();
   }
 
   buyClicker(index, delta) {
@@ -183,7 +184,7 @@ class Game extends React.Component {
     let clickElement = this.state.clickerArray[index];
     clickElement.total = clickElement.total + delta;
     if (clickElement.total >= clickElement.unlockNext) {
-      let clickElementNext = this.state.clickerArray[index + 1];
+      let clickElementNext = this.state.clickerArray[index + 2];
       clickElementNext.unlocked = true;
     }
     this.setState({
@@ -219,19 +220,14 @@ class Game extends React.Component {
   }
 
   checkForUnlocks() {
-    let clickerArray = this.state.clickerArray;
     let upgradeArray = this.state.upgradeArray;
-    clickerArray.forEach(
-      clickElement =>
-        (clickElement.unlocked = clickElement.total >= clickElement.unlockNext)
-    );
     let goldElement = this.state.clickerArray[0];
     upgradeArray.forEach(
       upgradeElement =>
-        (upgradeElement.visible = goldElement.total >= upgradeElement.cost)
+        (upgradeElement.visible =
+          goldElement.total >= upgradeElement.cost && !upgradeElement.bought)
     );
     this.setState({
-      clickerArray: this.state.clickerArray,
       upgradeArray: this.state.upgradeArray
     });
   }
