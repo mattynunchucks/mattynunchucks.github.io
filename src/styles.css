@@ -2,16 +2,9 @@ body {
   font-family: sans-serif;
 }
 .buttons {
-  float: left;
   width: 30%;
-}
-.resources {
-  float: left;
-  width: 30%;
-  padding: 10px;
 }
 .upgrades {
-  float: left;
   width: 30%;
   padding: 10px;
 }

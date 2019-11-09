@@ -284,17 +284,6 @@ class Game extends React.Component {
             </div>
           ))}
         </div>
-        <div className="resources">
-          {this.state.clickerArray.map((clickElement, index) => (
-            <div className={clickElement.name} key={clickElement.name}>
-              {clickElement.unlocked && (
-                <div className="resource">
-                  {clickElement.name}: {clickElement.total.toFixed(2)}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
         <div className="upgrades">
           {this.state.upgradeArray.map((upgradeElement, index) => (
             <div className={upgradeElement.name} key={upgradeElement.name}>
