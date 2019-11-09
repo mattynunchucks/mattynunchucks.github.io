@@ -11,6 +11,7 @@ class Game extends React.Component {
           total: 0,
           unlocked: true,
           cost: 0,
+          costs: "",
           incrementBy: 0.5,
           unlockNext: 15,
           upgradeMultiplier: 1
@@ -20,6 +21,7 @@ class Game extends React.Component {
           total: 0,
           unlocked: false,
           cost: 15,
+          costs: "Gold",
           incrementBy: 0.4,
           unlockNext: 30,
           upgradeMultiplier: 1
@@ -29,6 +31,7 @@ class Game extends React.Component {
           total: 0,
           unlocked: false,
           cost: 30,
+          costs: "Peasants",
           incrementBy: 0.3,
           unlockNext: 45,
           upgradeMultiplier: 1
@@ -38,6 +41,7 @@ class Game extends React.Component {
           total: 0,
           unlocked: false,
           cost: 45,
+          costs: "Farmers",
           incrementBy: 0.2,
           unlockNext: 60,
           upgradeMultiplier: 1
@@ -47,6 +51,7 @@ class Game extends React.Component {
           total: 0,
           unlocked: false,
           cost: 60,
+          costs: "Blacksmiths",
           incrementBy: 0.15,
           unlockNext: 200,
           upgradeMultiplier: 1
@@ -56,6 +61,7 @@ class Game extends React.Component {
           total: 0,
           unlocked: false,
           cost: 200,
+          costs: "Knights",
           incrementBy: 0.1,
           unlockNext: 1000,
           upgradeMultiplier: 1
@@ -65,6 +71,7 @@ class Game extends React.Component {
           total: 0,
           unlocked: false,
           cost: 1000,
+          costs: "Barons",
           incrementBy: 0.1,
           unlockNext: 10000,
           upgradeMultiplier: 1
@@ -74,6 +81,7 @@ class Game extends React.Component {
           total: 0,
           unlocked: false,
           cost: 10000,
+          costs: "Earls",
           incrementBy: 0.1,
           unlockNext: 100000,
           upgradeMultiplier: 1
@@ -139,7 +147,6 @@ class Game extends React.Component {
   incrementer() {
     let clickerArray = this.state.clickerArray;
     let clickerArrayLength = clickerArray.length;
-
     this.state.clickerArray.map((clickElement, index) => {
       if (index + 1 < clickerArrayLength) {
         if (
@@ -236,11 +243,16 @@ class Game extends React.Component {
             <div className={clickElement.name} key={clickElement.name}>
               {clickElement.unlocked && (
                 <button
-                  className="button"
+                  className={index === 0 ? "gold-button" : "click-button"}
                   id={clickElement.name}
                   onClick={() => this.buyClicker(index, 1)}
                 >
-                  {clickElement.name}
+                  {clickElement.name} ({clickElement.total})
+                  {index > 0 && (
+                    <p className="click-button-cost">
+                      {clickElement.cost} {clickElement.costs}
+                    </p>
+                  )}
                 </button>
               )}
             </div>
@@ -250,7 +262,7 @@ class Game extends React.Component {
           {this.state.clickerArray.map((clickElement, index) => (
             <div className={clickElement.name} key={clickElement.name}>
               {clickElement.unlocked && (
-                <div>
+                <div className="resource">
                   {clickElement.name}: {clickElement.total.toFixed(2)}
                 </div>
               )}
@@ -262,11 +274,14 @@ class Game extends React.Component {
             <div className={upgradeElement.name} key={upgradeElement.name}>
               {upgradeElement.visible && (
                 <button
-                  className="button"
+                  className="upgrade-button"
                   id={upgradeElement.name}
                   onClick={() => this.buyUpgrade(index)}
                 >
-                  {upgradeElement.name}: {upgradeElement.cost} Gold
+                  {upgradeElement.name}:{" "}
+                  <p className="click-button-cost">
+                    {upgradeElement.cost} Gold
+                  </p>
                 </button>
               )}
             </div>
