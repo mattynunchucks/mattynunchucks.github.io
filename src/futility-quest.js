@@ -5,6 +5,7 @@ class Game extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
+      clickMultiplesArray: [10, 100, 1000],
       clickerArray: [
         {
           name: "Gold",
@@ -169,8 +170,8 @@ class Game extends React.Component {
     let clickElement = this.state.clickerArray[index];
     if (index !== 0) {
       let clickElementPrevious = this.state.clickerArray[index - 1];
-      if (clickElementPrevious.total >= clickElement.cost) {
-        this.setNewTotal(index - 1, -clickElement.cost);
+      if (clickElementPrevious.total >= clickElement.cost * delta) {
+        this.setNewTotal(index - 1, -clickElement.cost * delta);
         this.setNewTotal(index, delta);
       }
     } else {
@@ -240,21 +241,46 @@ class Game extends React.Component {
       <div className="game">
         <div className="buttons">
           {this.state.clickerArray.map((clickElement, index) => (
-            <div className={clickElement.name} key={clickElement.name}>
-              {clickElement.unlocked && (
-                <button
-                  className={index === 0 ? "gold-button" : "click-button"}
-                  id={clickElement.name}
-                  onClick={() => this.buyClicker(index, 1)}
-                >
-                  {clickElement.name} ({clickElement.total})
-                  {index > 0 && (
-                    <p className="click-button-cost">
-                      {clickElement.cost} {clickElement.costs}
-                    </p>
-                  )}
-                </button>
-              )}
+            <div>
+              <div className={clickElement.name} key={clickElement.name}>
+                {clickElement.unlocked && (
+                  <div>
+                    <button
+                      className={index === 0 ? "gold-button" : "click-button"}
+                      id={clickElement.name}
+                      onClick={() => this.buyClicker(index, 1)}
+                      disabled={
+                        index > 0 &&
+                        this.state.clickerArray[index - 1].total <
+                          clickElement.cost
+                      }
+                    >
+                      {clickElement.name} ({clickElement.total.toFixed(2)})
+                      {index > 0 && (
+                        <p className="click-button-cost">
+                          {clickElement.cost} {clickElement.costs}
+                        </p>
+                      )}
+                    </button>
+                    <div className="multiple-click-container">
+                      {index > 0 &&
+                        this.state.clickMultiplesArray.map(multiple => (
+                          <button
+                            className="multiple-click-button"
+                            id={clickElement.name}
+                            onClick={() => this.buyClicker(index, multiple)}
+                            disabled={
+                              this.state.clickerArray[index - 1].total <=
+                              clickElement.cost * multiple
+                            }
+                          >
+                            {multiple}x
+                          </button>
+                        ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           ))}
         </div>
@@ -277,6 +303,9 @@ class Game extends React.Component {
                   className="upgrade-button"
                   id={upgradeElement.name}
                   onClick={() => this.buyUpgrade(index)}
+                  disabled={
+                    this.state.clickerArray[0].total < upgradeElement.cost
+                  }
                 >
                   {upgradeElement.name}:{" "}
                   <p className="click-button-cost">
