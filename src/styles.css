@@ -1,12 +1,15 @@
 body {
   font-family: sans-serif;
   background-color: black;
+  text-align: center;
 }
 .buttons {
   width: 30%;
+  margin: 0 auto;
 }
 .upgrades {
   width: 30%;
+  margin: 0 auto;
 }
 .click-button {
   background-color: #16a31b;

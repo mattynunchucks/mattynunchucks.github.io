@@ -298,7 +298,7 @@ class Game extends React.Component {
                         this.state.clickMultiplesArray.map(multiple => (
                           <button
                             className="multiple-click-button"
-                            id={clickElement.name}
+                            id={clickElement.name + "_" + multiple}
                             onClick={() => this.buyClicker(index, multiple)}
                             disabled={
                               this.state.clickerArray[index - 1].total <=
