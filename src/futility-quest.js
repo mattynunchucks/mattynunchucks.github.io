@@ -1,5 +1,6 @@
 import ReactDOM from "react-dom";
 import React, { Component } from "react";
+import Cookies from "universal-cookie";
 
 class Game extends React.Component {
   constructor(props) {
@@ -260,16 +261,38 @@ class Game extends React.Component {
     upgradeArray.forEach(
       upgradeElement =>
         (upgradeElement.visible =
-          goldElement.total >= upgradeElement.cost || upgradeElement.visible)
+          (goldElement.total >= upgradeElement.cost &&
+            !upgradeElement.bought) ||
+          upgradeElement.visible)
     );
     this.setState({
       upgradeArray: this.state.upgradeArray
     });
   }
 
+  saveData() {
+    cookies.set("saveData", this.state.clickerArray, {
+      path: "/"
+    });
+    console.log(cookies.get("saveData"));
+  }
+
+  loadData() {
+    console.log(cookies.get("saveData"));
+    this.setState({
+      clickerArray: cookies.get("saveData")
+    });
+  }
+
   render() {
     return (
       <div className="game">
+        <button id="save" onClick={this.saveData}>
+          Save
+        </button>
+        <button id="load" onClick={this.loadData}>
+          Load
+        </button>
         <div className="buttons">
           <p className="buttons-header">Clickers</p>
           {this.state.clickerArray.map((clickElement, index) => (
@@ -343,5 +366,5 @@ class Game extends React.Component {
     );
   }
 }
-
+const cookies = new Cookies();
 ReactDOM.render(<Game />, document.getElementById("app"));
