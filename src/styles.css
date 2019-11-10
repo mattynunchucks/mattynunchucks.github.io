@@ -4,12 +4,29 @@ body {
   text-align: center;
 }
 .buttons {
-  width: 30%;
   margin: 0 auto;
+  border-style: solid;
+  border-color: grey;
+  border-width: 1px;
+  padding: 20px;
+}
+.buttons-header {
+  margin-top: 0;
+  color: silver;
 }
 .upgrades {
-  width: 30%;
   margin: 0 auto;
+  border-style: solid;
+  border-color: gold;
+  border-width: 1px;
+  padding: 20px;
+}
+.upgrades-header {
+  margin-top: 0;
+  color: gold;
+}
+.spacer {
+  padding-bottom: 25px;
 }
 .click-button {
   background-color: #16a31b;

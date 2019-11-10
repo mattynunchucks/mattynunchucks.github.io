@@ -97,7 +97,7 @@ class Game extends React.Component {
           type: "booster",
           bought: false,
           value: 0.25,
-          visible: false
+          visible: true
         },
         {
           name: "Peasant Booster",
@@ -260,7 +260,7 @@ class Game extends React.Component {
     upgradeArray.forEach(
       upgradeElement =>
         (upgradeElement.visible =
-          goldElement.total >= upgradeElement.cost && !upgradeElement.bought)
+          goldElement.total >= upgradeElement.cost || upgradeElement.visible)
     );
     this.setState({
       upgradeArray: this.state.upgradeArray
@@ -271,6 +271,7 @@ class Game extends React.Component {
     return (
       <div className="game">
         <div className="buttons">
+          <p className="buttons-header">Clickers</p>
           {this.state.clickerArray.map((clickElement, index) => (
             <div>
               <div className={clickElement.name} key={clickElement.name}>
@@ -315,7 +316,9 @@ class Game extends React.Component {
             </div>
           ))}
         </div>
+        <div className="spacer" />
         <div className="upgrades">
+          <p className="upgrades-header">Upgrades</p>
           {this.state.upgradeArray.map((upgradeElement, index) => (
             <div className={upgradeElement.name} key={upgradeElement.name}>
               {upgradeElement.visible && (
