@@ -3,6 +3,9 @@ body {
   background-color: black;
   text-align: center;
 }
+.settings {
+  float: right;
+}
 .buttons {
   margin: 0 auto;
   border-style: solid;

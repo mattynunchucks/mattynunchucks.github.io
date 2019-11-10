@@ -174,16 +174,21 @@ class Game extends React.Component {
         }
       ]
     };
+    this.baseState = this.state;
   }
   componentDidMount() {
-    this.interval = setInterval(() => this.incrementer(), 500);
+    this.interval = setInterval(() => this.incrementer(1), 1000);
   }
 
   componentWillUnmount() {
     clearInterval(this.interval);
   }
 
-  incrementer() {
+  resetGame() {
+    this.setState(this.baseState);
+  }
+
+  incrementer(timeToIncrement) {
     let clickerArray = this.state.clickerArray;
     let clickerArrayLength = clickerArray.length;
     this.state.clickerArray.map((clickElement, index) => {
@@ -195,7 +200,8 @@ class Game extends React.Component {
           clickElement.total =
             clickElement.total +
             this.state.clickerArray[index + 1].total *
-              (clickElement.incrementBy * clickElement.upgradeMultiplier);
+              (clickElement.incrementBy * clickElement.upgradeMultiplier) *
+              timeToIncrement;
         }
         this.setState(prevState => {
           return { clickerArray: this.state.clickerArray };
@@ -275,33 +281,37 @@ class Game extends React.Component {
   saveData() {
     console.log("save");
     console.log(this.state);
-    cookies.set(
-      "saveData",
-      [this.state.clickerArray, this.state.upgradeArray],
-      {
-        path: "/"
-      }
-    );
+    let objJsonStr = JSON.stringify(this.state);
+    let objJsonB64 = Buffer.from(objJsonStr).toString("base64");
+    cookies.set("saveData", objJsonB64, {
+      path: "/"
+    });
   }
 
   loadData() {
     console.log("load");
-    console.log(cookies.get("saveData"));
-    this.setState({
-      clickerArray: cookies.get("saveData")[0],
-      upgradeArray: cookies.get("saveData")[1]
-    });
+    let loadState = cookies.get("saveData");
+    let loadedState = new Buffer(loadState, "base64").toString("ascii");
+    let parsedState = JSON.parse(loadedState);
+    console.log(parsedState);
+
+    this.setState(parsedState);
   }
 
   render() {
     return (
       <div className="game">
-        <button id="save" onClick={() => this.saveData()}>
-          Save
-        </button>
-        <button id="load" onClick={() => this.loadData()}>
-          Load
-        </button>
+        <div className="settings">
+          <button id="save" onClick={() => this.saveData()}>
+            Save
+          </button>
+          <button id="load" onClick={() => this.loadData()}>
+            Load
+          </button>
+          <button id="reset" onClick={() => this.resetGame()}>
+            Reset Game
+          </button>
+        </div>
         <div className="buttons">
           <p className="buttons-header">Clickers</p>
           {this.state.clickerArray.map((clickElement, index) => (
