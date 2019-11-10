@@ -2,6 +2,8 @@ import ReactDOM from "react-dom";
 import React, { Component } from "react";
 import Cookies from "universal-cookie";
 
+const cookies = new Cookies();
+
 class Game extends React.Component {
   constructor(props) {
     super(props);
@@ -271,26 +273,33 @@ class Game extends React.Component {
   }
 
   saveData() {
-    cookies.set("saveData", this.state.clickerArray, {
-      path: "/"
-    });
-    console.log(cookies.get("saveData"));
+    console.log("save");
+    console.log(this.state);
+    cookies.set(
+      "saveData",
+      [this.state.clickerArray, this.state.upgradeArray],
+      {
+        path: "/"
+      }
+    );
   }
 
   loadData() {
+    console.log("load");
     console.log(cookies.get("saveData"));
     this.setState({
-      clickerArray: cookies.get("saveData")
+      clickerArray: cookies.get("saveData")[0],
+      upgradeArray: cookies.get("saveData")[1]
     });
   }
 
   render() {
     return (
       <div className="game">
-        <button id="save" onClick={this.saveData}>
+        <button id="save" onClick={() => this.saveData()}>
           Save
         </button>
-        <button id="load" onClick={this.loadData}>
+        <button id="load" onClick={() => this.loadData()}>
           Load
         </button>
         <div className="buttons">
@@ -366,5 +375,5 @@ class Game extends React.Component {
     );
   }
 }
-const cookies = new Cookies();
+
 ReactDOM.render(<Game />, document.getElementById("app"));
