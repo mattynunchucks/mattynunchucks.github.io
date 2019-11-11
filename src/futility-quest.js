@@ -172,7 +172,8 @@ class Game extends React.Component {
           value: 0.25,
           visible: false
         }
-      ]
+      ],
+      lastSave: new Date()
     };
     this.baseState = this.state;
   }
@@ -189,6 +190,9 @@ class Game extends React.Component {
   }
 
   incrementer(timeToIncrement) {
+    if (timeToIncrement > 1) {
+      console.log("offline for " + timeToIncrement + " seconds.");
+    }
     let clickerArray = this.state.clickerArray;
     let clickerArrayLength = clickerArray.length;
     this.state.clickerArray.map((clickElement, index) => {
@@ -208,6 +212,9 @@ class Game extends React.Component {
         });
       }
     });
+    if (timeToIncrement > 1) {
+      console.log("offline for " + timeToIncrement + " seconds.");
+    }
     this.checkForUnlocks();
   }
 
@@ -256,7 +263,8 @@ class Game extends React.Component {
 
   setNewUpgradeMultiplier(index, delta) {
     let clickElement = this.state.clickerArray[index];
-    clickElement.total = clickElement.total + delta;
+    // Matt, what is the point of this line?
+    //clickElement.total = clickElement.total + delta;
     clickElement.upgradeMultiplier = clickElement.upgradeMultiplier + delta;
     this.setState({
       clickerArray: this.state.clickerArray
@@ -281,11 +289,19 @@ class Game extends React.Component {
   saveData() {
     console.log("save");
     console.log(this.state);
-    let objJsonStr = JSON.stringify(this.state);
-    let objJsonB64 = Buffer.from(objJsonStr).toString("base64");
-    cookies.set("saveData", objJsonB64, {
-      path: "/"
-    });
+    const saveTime = new Date().getTime() / 1000;
+    this.setState(
+      {
+        lastSave: saveTime
+      },
+      function() {
+        let objJsonStr = JSON.stringify(this.state);
+        let objJsonB64 = Buffer.from(objJsonStr).toString("base64");
+        cookies.set("saveData", objJsonB64, {
+          path: "/"
+        });
+      }
+    );
   }
 
   loadData() {
@@ -294,8 +310,13 @@ class Game extends React.Component {
     let loadedState = new Buffer(loadState, "base64").toString("ascii");
     let parsedState = JSON.parse(loadedState);
     console.log(parsedState);
-
-    this.setState(parsedState);
+    console.log(parsedState.lastSave);
+    let now = new Date().getTime() / 1000;
+    let timeDiff = Math.floor(now - parsedState.lastSave);
+    console.log(timeDiff);
+    Object.keys(parsedState).map((parsedElement, key) => {
+      return this.setState({ [parsedElement]: parsedState[parsedElement] });
+    });
   }
 
   render() {
