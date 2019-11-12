@@ -174,6 +174,7 @@ class Game extends React.Component {
         }
       ],
       lastSave: new Date().getTime() / 1000
+
     };
     this.baseState = this.state;
   }
@@ -194,7 +195,6 @@ class Game extends React.Component {
   incrementer(timeToIncrement) {
     if (timeToIncrement > 1) {
       console.log("offline for " + timeToIncrement + " seconds.");
-      console.log(1 * 60 * timeToIncrement);
     }
     let clickerArray = this.state.clickerArray;
     let clickerArrayLength = clickerArray.length;
@@ -267,6 +267,9 @@ class Game extends React.Component {
 
   setNewUpgradeMultiplier(index, delta) {
     let clickElement = this.state.clickerArray[index];
+    // Matt, what is the point of this line?
+    //clickElement.total = clickElement.total + delta;
+
     clickElement.upgradeMultiplier = clickElement.upgradeMultiplier + delta;
     this.setState({
       clickerArray: this.state.clickerArray
@@ -320,9 +323,6 @@ class Game extends React.Component {
       return this.setState({ [parsedElement]: parsedState[parsedElement] });
     });
     //this.incrementer(timeDiff);
-    /*
-    var clickerState = {...this.state.}
-    */
   }
 
   render() {
