@@ -8,7 +8,6 @@ class Game extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      clickMultiplesArray: [10, 100, 1000],
       clickerArray: [
         {
           name: "Gold",
@@ -22,7 +21,7 @@ class Game extends React.Component {
           name: "Peasants",
           total: 0,
           unlocked: true,
-          cost: 15,
+          cost: 30,
           incrementBy: 0.4,
           upgradeMultiplier: 1
         },
@@ -30,7 +29,7 @@ class Game extends React.Component {
           name: "Farmers",
           total: 0,
           unlocked: false,
-          cost: 30,
+          cost: 45,
           incrementBy: 0.3,
           upgradeMultiplier: 1
         },
@@ -38,7 +37,7 @@ class Game extends React.Component {
           name: "Blacksmith",
           total: 0,
           unlocked: false,
-          cost: 45,
+          cost: 100,
           incrementBy: 0.2,
           upgradeMultiplier: 1
         },
@@ -46,7 +45,7 @@ class Game extends React.Component {
           name: "Knights",
           total: 0,
           unlocked: false,
-          cost: 60,
+          cost: 500,
           costs: "Blacksmiths",
           incrementBy: 0.15,
           upgradeMultiplier: 1
@@ -55,7 +54,7 @@ class Game extends React.Component {
           name: "Baron",
           total: 0,
           unlocked: false,
-          cost: 200,
+          cost: 1000,
           costs: "Knights",
           incrementBy: 0.1,
           upgradeMultiplier: 1
@@ -64,7 +63,7 @@ class Game extends React.Component {
           name: "Earl",
           total: 0,
           unlocked: false,
-          cost: 1000,
+          cost: 10000,
           incrementBy: 0.1,
           upgradeMultiplier: 1
         },
@@ -72,7 +71,7 @@ class Game extends React.Component {
           name: "Count",
           total: 0,
           unlocked: false,
-          cost: 10000,
+          cost: 100000,
           incrementBy: 0.1,
           upgradeMultiplier: 1
         }
@@ -162,6 +161,7 @@ class Game extends React.Component {
       lastSave: new Date().getTime() / 1000
 
     };
+    this.clickMultiplesArray = [10, 100, 1000, "all"];
     this.baseState = this.state;
   }
 
@@ -211,9 +211,17 @@ class Game extends React.Component {
 
   buyClicker(index, delta) {
     let clickElement = this.state.clickerArray[index];
+    /*
+    
+    */
     if (index !== 0) {
       let clickElementPrevious = this.state.clickerArray[index - 1];
-      if (clickElementPrevious.total >= clickElement.cost * delta) {
+      if (delta === "all") {
+        let buyAll = Math.floor(clickElementPrevious.total / clickElement.cost);
+        delta = buyAll;
+        this.setNewTotal(index - 1, -clickElement.cost * delta);
+        this.setNewTotal(index, delta);
+      } else if (clickElementPrevious.total >= clickElement.cost * delta) {
         this.setNewTotal(index - 1, -clickElement.cost * delta);
         this.setNewTotal(index, delta);
       }
@@ -353,7 +361,7 @@ class Game extends React.Component {
                     </button>
                     <div className="multiple-click-container">
                       {index > 0 &&
-                        this.state.clickMultiplesArray.map(multiple => (
+                        this.clickMultiplesArray.map(multiple => (
                           <button
                             className="multiple-click-button"
                             id={clickElement.name + "_" + multiple}
@@ -363,7 +371,8 @@ class Game extends React.Component {
                               clickElement.cost * multiple
                             }
                           >
-                            {multiple}x
+                            {multiple}
+                            {multiple !== "all" ? "x" : ""}
                           </button>
                         ))}
                     </div>

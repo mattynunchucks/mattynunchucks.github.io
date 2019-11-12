@@ -44,12 +44,14 @@ body {
   cursor: pointer;
 }
 .multiple-click-container {
+  width: 300px;
+  margin: 0 auto;
 }
 .multiple-click-button {
   background-color: #16a31b;
   border: none;
   color: white;
-  width: 97.4px;
+  width: 23%;
   text-align: center;
   text-decoration: none;
   display: inline-block;
