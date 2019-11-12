@@ -178,6 +178,7 @@ class Game extends React.Component {
     };
     this.baseState = this.state;
   }
+
   // Jewelers after blacksmiths, can unlock diamonds, diamonds will pay for
   // upgrades.  10,000,000 gold per diamond?
   componentDidMount() {
