@@ -8,16 +8,14 @@ class Game extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      clickMultiplesArray: [10, 100, 1000],
+      clickMultiplesArray: [10, 100, 1000, "all"],
       clickerArray: [
         {
           name: "Gold",
           total: 0,
           unlocked: true,
           cost: 0,
-          costs: "",
           incrementBy: 0.5,
-          unlockNext: 15,
           upgradeMultiplier: 1
         },
         {
@@ -25,9 +23,7 @@ class Game extends React.Component {
           total: 0,
           unlocked: true,
           cost: 15,
-          costs: "Gold",
           incrementBy: 0.4,
-          unlockNext: 30,
           upgradeMultiplier: 1
         },
         {
@@ -35,9 +31,7 @@ class Game extends React.Component {
           total: 0,
           unlocked: false,
           cost: 30,
-          costs: "Peasants",
           incrementBy: 0.3,
-          unlockNext: 45,
           upgradeMultiplier: 1
         },
         {
@@ -45,9 +39,7 @@ class Game extends React.Component {
           total: 0,
           unlocked: false,
           cost: 45,
-          costs: "Farmers",
           incrementBy: 0.2,
-          unlockNext: 60,
           upgradeMultiplier: 1
         },
         {
@@ -57,7 +49,6 @@ class Game extends React.Component {
           cost: 60,
           costs: "Blacksmiths",
           incrementBy: 0.15,
-          unlockNext: 200,
           upgradeMultiplier: 1
         },
         {
@@ -67,7 +58,6 @@ class Game extends React.Component {
           cost: 200,
           costs: "Knights",
           incrementBy: 0.1,
-          unlockNext: 1000,
           upgradeMultiplier: 1
         },
         {
@@ -75,9 +65,7 @@ class Game extends React.Component {
           total: 0,
           unlocked: false,
           cost: 1000,
-          costs: "Barons",
           incrementBy: 0.1,
-          unlockNext: 10000,
           upgradeMultiplier: 1
         },
         {
@@ -85,9 +73,7 @@ class Game extends React.Component {
           total: 0,
           unlocked: false,
           cost: 10000,
-          costs: "Earls",
           incrementBy: 0.1,
-          unlockNext: 100000,
           upgradeMultiplier: 1
         }
       ],
@@ -177,6 +163,7 @@ class Game extends React.Component {
     };
     this.baseState = this.state;
   }
+
   // Jewelers after blacksmiths, can unlock diamonds, diamonds will pay for
   // upgrades.  10,000,000 gold per diamond?
   componentDidMount() {
@@ -224,9 +211,15 @@ class Game extends React.Component {
 
   buyClicker(index, delta) {
     let clickElement = this.state.clickerArray[index];
+    /*
+    
+    */
     if (index !== 0) {
       let clickElementPrevious = this.state.clickerArray[index - 1];
-      if (clickElementPrevious.total >= clickElement.cost * delta) {
+      if (delta === "all") {
+        let buyAll = Math.floor(clickElementPrevious.total / clickElement.cost);
+        delta = buyAll;
+      } else if (clickElementPrevious.total >= clickElement.cost * delta) {
         this.setNewTotal(index - 1, -clickElement.cost * delta);
         this.setNewTotal(index, delta);
       }
@@ -238,7 +231,7 @@ class Game extends React.Component {
   setNewTotal(index, delta) {
     let clickElement = this.state.clickerArray[index];
     clickElement.total = clickElement.total + delta;
-    if (clickElement.total >= clickElement.unlockNext) {
+    if (clickElement.total >= this.state.clickerArray[index + 1].cost) {
       let clickElementNext = this.state.clickerArray[index + 2];
       clickElementNext.unlocked = true;
     }
@@ -359,7 +352,8 @@ class Game extends React.Component {
                       {clickElement.name} ({clickElement.total.toFixed(2)})
                       {index > 0 && (
                         <p className="click-button-cost">
-                          {clickElement.cost} {clickElement.costs}
+                          {clickElement.cost}{" "}
+                          {this.state.clickerArray[index - 1].name}
                         </p>
                       )}
                     </button>
