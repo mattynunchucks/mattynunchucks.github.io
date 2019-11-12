@@ -8,86 +8,71 @@ class Game extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      clickMultiplesArray: [10, 100, 1000],
       clickerArray: [
         {
           name: "Gold",
           total: 0,
           unlocked: true,
           cost: 0,
-          costs: "",
           incrementBy: 0.5,
-          unlockNext: 15,
           upgradeMultiplier: 1
         },
         {
           name: "Peasants",
           total: 0,
           unlocked: true,
-          cost: 15,
-          costs: "Gold",
+          cost: 30,
           incrementBy: 0.4,
-          unlockNext: 30,
           upgradeMultiplier: 1
         },
         {
           name: "Farmers",
           total: 0,
           unlocked: false,
-          cost: 30,
-          costs: "Peasants",
+          cost: 45,
           incrementBy: 0.3,
-          unlockNext: 45,
           upgradeMultiplier: 1
         },
         {
           name: "Blacksmith",
           total: 0,
           unlocked: false,
-          cost: 45,
-          costs: "Farmers",
+          cost: 100,
           incrementBy: 0.2,
-          unlockNext: 60,
           upgradeMultiplier: 1
         },
         {
           name: "Knights",
           total: 0,
           unlocked: false,
-          cost: 60,
+          cost: 500,
           costs: "Blacksmiths",
           incrementBy: 0.15,
-          unlockNext: 200,
           upgradeMultiplier: 1
         },
         {
           name: "Baron",
           total: 0,
           unlocked: false,
-          cost: 200,
+          cost: 1000,
           costs: "Knights",
           incrementBy: 0.1,
-          unlockNext: 1000,
           upgradeMultiplier: 1
         },
         {
           name: "Earl",
           total: 0,
           unlocked: false,
-          cost: 1000,
-          costs: "Barons",
+          cost: 10000,
           incrementBy: 0.1,
-          unlockNext: 10000,
           upgradeMultiplier: 1
         },
         {
           name: "Count",
           total: 0,
           unlocked: false,
-          cost: 10000,
-          costs: "Earls",
+          cost: 100000,
           incrementBy: 0.1,
-          unlockNext: 100000,
           upgradeMultiplier: 1
         }
       ],
@@ -175,8 +160,10 @@ class Game extends React.Component {
       ],
       lastSave: new Date().getTime() / 1000
     };
+    this.clickMultiplesArray = [10, 100, 1000, "all"];
     this.baseState = this.state;
   }
+
   // Jewelers after blacksmiths, can unlock diamonds, diamonds will pay for
   // upgrades.  10,000,000 gold per diamond?
   componentDidMount() {
@@ -224,9 +211,17 @@ class Game extends React.Component {
 
   buyClicker(index, delta) {
     let clickElement = this.state.clickerArray[index];
+    /*
+    
+    */
     if (index !== 0) {
       let clickElementPrevious = this.state.clickerArray[index - 1];
-      if (clickElementPrevious.total >= clickElement.cost * delta) {
+      if (delta === "all") {
+        let buyAll = Math.floor(clickElementPrevious.total / clickElement.cost);
+        delta = buyAll;
+        this.setNewTotal(index - 1, -clickElement.cost * delta);
+        this.setNewTotal(index, delta);
+      } else if (clickElementPrevious.total >= clickElement.cost * delta) {
         this.setNewTotal(index - 1, -clickElement.cost * delta);
         this.setNewTotal(index, delta);
       }
@@ -238,7 +233,7 @@ class Game extends React.Component {
   setNewTotal(index, delta) {
     let clickElement = this.state.clickerArray[index];
     clickElement.total = clickElement.total + delta;
-    if (clickElement.total >= clickElement.unlockNext) {
+    if (clickElement.total >= this.state.clickerArray[index + 1].cost) {
       let clickElementNext = this.state.clickerArray[index + 2];
       clickElementNext.unlocked = true;
     }
@@ -359,13 +354,14 @@ class Game extends React.Component {
                       {clickElement.name} ({clickElement.total.toFixed(2)})
                       {index > 0 && (
                         <p className="click-button-cost">
-                          {clickElement.cost} {clickElement.costs}
+                          {clickElement.cost}{" "}
+                          {this.state.clickerArray[index - 1].name}
                         </p>
                       )}
                     </button>
                     <div className="multiple-click-container">
                       {index > 0 &&
-                        this.state.clickMultiplesArray.map(multiple => (
+                        this.clickMultiplesArray.map(multiple => (
                           <button
                             className="multiple-click-button"
                             id={clickElement.name + "_" + multiple}
@@ -375,7 +371,8 @@ class Game extends React.Component {
                               clickElement.cost * multiple
                             }
                           >
-                            {multiple}x
+                            {multiple}
+                            {multiple !== "all" ? "x" : ""}
                           </button>
                         ))}
                     </div>
