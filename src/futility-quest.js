@@ -172,10 +172,13 @@ class Game extends React.Component {
           value: 0.25,
           visible: false
         }
-      ]
+      ],
+      lastSave: new Date().getTime() / 1000
     };
     this.baseState = this.state;
   }
+  // Jewelers after blacksmiths, can unlock diamonds, diamonds will pay for
+  // upgrades.  10,000,000 gold per diamond?
   componentDidMount() {
     this.interval = setInterval(() => this.incrementer(1), 1000);
   }
@@ -189,6 +192,10 @@ class Game extends React.Component {
   }
 
   incrementer(timeToIncrement) {
+    if (timeToIncrement > 1) {
+      console.log("offline for " + timeToIncrement + " seconds.");
+      console.log(1 * 60 * timeToIncrement);
+    }
     let clickerArray = this.state.clickerArray;
     let clickerArrayLength = clickerArray.length;
     this.state.clickerArray.map((clickElement, index) => {
@@ -200,14 +207,18 @@ class Game extends React.Component {
           clickElement.total =
             clickElement.total +
             this.state.clickerArray[index + 1].total *
-              (clickElement.incrementBy * clickElement.upgradeMultiplier) *
-              timeToIncrement;
+              (clickElement.incrementBy *
+                clickElement.upgradeMultiplier *
+                timeToIncrement);
         }
         this.setState(prevState => {
           return { clickerArray: this.state.clickerArray };
         });
       }
     });
+    if (timeToIncrement > 1) {
+      console.log("offline for " + timeToIncrement + " seconds.");
+    }
     this.checkForUnlocks();
   }
 
@@ -256,7 +267,6 @@ class Game extends React.Component {
 
   setNewUpgradeMultiplier(index, delta) {
     let clickElement = this.state.clickerArray[index];
-    clickElement.total = clickElement.total + delta;
     clickElement.upgradeMultiplier = clickElement.upgradeMultiplier + delta;
     this.setState({
       clickerArray: this.state.clickerArray
@@ -281,11 +291,19 @@ class Game extends React.Component {
   saveData() {
     console.log("save");
     console.log(this.state);
-    let objJsonStr = JSON.stringify(this.state);
-    let objJsonB64 = Buffer.from(objJsonStr).toString("base64");
-    cookies.set("saveData", objJsonB64, {
-      path: "/"
-    });
+    const saveTime = new Date().getTime() / 1000;
+    this.setState(
+      {
+        lastSave: saveTime
+      },
+      function() {
+        let objJsonStr = JSON.stringify(this.state);
+        let objJsonB64 = Buffer.from(objJsonStr).toString("base64");
+        cookies.set("saveData", objJsonB64, {
+          path: "/"
+        });
+      }
+    );
   }
 
   loadData() {
@@ -294,8 +312,17 @@ class Game extends React.Component {
     let loadedState = new Buffer(loadState, "base64").toString("ascii");
     let parsedState = JSON.parse(loadedState);
     console.log(parsedState);
-
-    this.setState(parsedState);
+    console.log(parsedState.lastSave);
+    let now = new Date().getTime() / 1000;
+    let timeDiff = Math.floor(now - parsedState.lastSave);
+    console.log(timeDiff);
+    Object.keys(parsedState).map((parsedElement, key) => {
+      return this.setState({ [parsedElement]: parsedState[parsedElement] });
+    });
+    //this.incrementer(timeDiff);
+    /*
+    var clickerState = {...this.state.}
+    */
   }
 
   render() {
