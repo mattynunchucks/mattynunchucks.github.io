@@ -8,7 +8,7 @@ class Game extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      clickMultiplesArray: [10, 100, 1000],
+      clickMultiplesArray: [10, 100, 1000, "all"],
       clickerArray: [
         {
           name: "Gold",
@@ -211,9 +211,15 @@ class Game extends React.Component {
 
   buyClicker(index, delta) {
     let clickElement = this.state.clickerArray[index];
+    /*
+    
+    */
     if (index !== 0) {
       let clickElementPrevious = this.state.clickerArray[index - 1];
-      if (clickElementPrevious.total >= clickElement.cost * delta) {
+      if (delta === "all") {
+        let buyAll = Math.floor(clickElementPrevious.total / clickElement.cost);
+        delta = buyAll;
+      } else if (clickElementPrevious.total >= clickElement.cost * delta) {
         this.setNewTotal(index - 1, -clickElement.cost * delta);
         this.setNewTotal(index, delta);
       }
