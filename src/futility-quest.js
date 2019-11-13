@@ -42,7 +42,7 @@ class Game extends React.Component {
           upgradeMultiplier: 1
         },
         {
-          name: "Knights",
+          name: "Jewelers",
           total: 0,
           unlocked: false,
           cost: 500,
@@ -51,27 +51,36 @@ class Game extends React.Component {
           upgradeMultiplier: 1
         },
         {
-          name: "Baron",
+          name: "Knights",
           total: 0,
           unlocked: false,
           cost: 1000,
+          costs: "Jewelers",
+          incrementBy: 0.15,
+          upgradeMultiplier: 1
+        },
+        {
+          name: "Barons",
+          total: 0,
+          unlocked: false,
+          cost: 10000,
           costs: "Knights",
           incrementBy: 0.1,
           upgradeMultiplier: 1
         },
         {
-          name: "Earl",
+          name: "Earls",
           total: 0,
           unlocked: false,
-          cost: 10000,
+          cost: 100000,
           incrementBy: 0.1,
           upgradeMultiplier: 1
         },
         {
-          name: "Count",
+          name: "Counts",
           total: 0,
           unlocked: false,
-          cost: 100000,
+          cost: 1000000,
           incrementBy: 0.1,
           upgradeMultiplier: 1
         }
@@ -81,7 +90,6 @@ class Game extends React.Component {
           name: "Gold Booster",
           cost: 1000,
           affects: "Gold",
-          affectsIndex: 0,
           type: "booster",
           bought: false,
           value: 0.25,
@@ -91,7 +99,6 @@ class Game extends React.Component {
           name: "Peasant Booster",
           cost: 5000,
           affects: "Peasants",
-          affectsIndex: 1,
           type: "booster",
           bought: false,
           value: 0.25,
@@ -101,7 +108,6 @@ class Game extends React.Component {
           name: "Farmer Booster",
           cost: 15000,
           affects: "Farmer",
-          affectsIndex: 2,
           type: "booster",
           bought: false,
           value: 0.25,
@@ -111,7 +117,6 @@ class Game extends React.Component {
           name: "Blacksmith Booster",
           cost: 50000,
           affects: "Blacksmiths",
-          affectsIndex: 3,
           type: "booster",
           bought: false,
           value: 0.25,
@@ -121,7 +126,6 @@ class Game extends React.Component {
           name: "Knight Booster",
           cost: 100000,
           affects: "Knights",
-          affectsIndex: 4,
           type: "booster",
           bought: false,
           value: 0.25,
@@ -131,7 +135,6 @@ class Game extends React.Component {
           name: "Baron Booster",
           cost: 10000000,
           affects: "Barons",
-          affectsIndex: 5,
           type: "booster",
           bought: false,
           value: 0.25,
@@ -141,7 +144,6 @@ class Game extends React.Component {
           name: "Earl Booster",
           cost: 100000000,
           affects: "Earls",
-          affectsIndex: 6,
           type: "booster",
           bought: false,
           value: 0.25,
@@ -151,11 +153,19 @@ class Game extends React.Component {
           name: "Count Booster",
           cost: 10000000000,
           affects: "Counts",
-          affectsIndex: 7,
           type: "booster",
           bought: false,
           value: 0.25,
           visible: false
+        }
+      ],
+      diamondArray: [
+        {
+          name: "Diamonds",
+          total: 0,
+          unlocked: true,
+          cost: 0,
+          upgradeMultiplier: 0.1
         }
       ],
       lastSave: new Date().getTime() / 1000
@@ -203,17 +213,14 @@ class Game extends React.Component {
         });
       }
     });
-    if (timeToIncrement > 1) {
-      console.log("offline for " + timeToIncrement + " seconds.");
-    }
     this.checkForUnlocks();
   }
 
   buyClicker(index, delta) {
     let clickElement = this.state.clickerArray[index];
-    /*
-    
-    */
+    //   let clickName = clickElement.name;
+    //    let objMatch = this.state.clickerArray.find(obj => obj.name === clickName);
+
     if (index !== 0) {
       let clickElementPrevious = this.state.clickerArray[index - 1];
       if (delta === "all") {
@@ -246,13 +253,14 @@ class Game extends React.Component {
     let upgradeElement = this.state.upgradeArray[index];
     let upgradeCost = upgradeElement.cost;
     let upgradeValue = upgradeElement.value;
-    let upgradeAffectsIndex = upgradeElement.affectsIndex;
-    let goldElement = this.state.clickerArray[0];
+    let upgradeAffects = upgradeElement.affects;
+
+    let goldElement = this.state.clickerArray.find(obj => obj.name === "Gold");
     if (goldElement.total >= upgradeCost) {
       this.setNewTotal(0, -upgradeElement.cost);
       upgradeElement.visible = false;
       upgradeElement.bought = true;
-      this.setNewUpgradeMultiplier(upgradeAffectsIndex, upgradeValue);
+      this.setNewUpgradeMultiplier(upgradeAffects, upgradeValue);
       this.setState({
         clickerArray: this.state.clickerArray,
         upgradeArray: this.state.upgradeArray
@@ -260,11 +268,22 @@ class Game extends React.Component {
     }
   }
 
-  setNewUpgradeMultiplier(index, delta) {
-    let clickElement = this.state.clickerArray[index];
+  setNewUpgradeMultiplier(name, delta) {
+    //let clickElement = this.state.clickerArray[index];
+    let clickElement = this.state.clickerArray.find(obj => obj.name === name);
+    console.log(clickElement);
     clickElement.upgradeMultiplier = clickElement.upgradeMultiplier + delta;
     this.setState({
       clickerArray: this.state.clickerArray
+    });
+  }
+
+  buyDiamonds(delta) {
+    let diamondElement = this.state.diamondArray[0];
+    diamondElement.total =
+      diamondElement.total + delta * diamondElement.upgradeMultiplier;
+    this.setState({
+      diamondArray: this.state.diamondArray
     });
   }
 
@@ -278,6 +297,14 @@ class Game extends React.Component {
             !upgradeElement.bought) ||
           upgradeElement.visible)
     );
+    let objMatch = this.state.clickerArray.find(obj => obj.name === "Jewelers");
+    if (objMatch.total >= 10000) {
+      let diamondElement = this.state.diamondArray[0];
+      diamondElement.unlocked = true;
+      this.setState({
+        diamondArray: this.state.diamondArray
+      });
+    }
     this.setState({
       upgradeArray: this.state.upgradeArray
     });
@@ -385,6 +412,19 @@ class Game extends React.Component {
         <div className="spacer" />
         <div className="upgrades">
           <p className="upgrades-header">Upgrades</p>
+          {this.state.diamondArray.map((diamondElement, index) => (
+            <div>
+              {diamondElement.unlocked && (
+                <button
+                  className={diamondElement.name}
+                  id={diamondElement.name}
+                  onClick={() => this.buyDiamonds(1)}
+                >
+                  Diamonds ({diamondElement.total.toFixed(2)})
+                </button>
+              )}
+            </div>
+          ))}
           {this.state.upgradeArray.map((upgradeElement, index) => (
             <div className={upgradeElement.name} key={upgradeElement.name}>
               {upgradeElement.visible && (
