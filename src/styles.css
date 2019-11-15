@@ -44,12 +44,14 @@ body {
   cursor: pointer;
 }
 .multiple-click-container {
+  width: 300px;
+  margin: 0 auto;
 }
 .multiple-click-button {
   background-color: #16a31b;
   border: none;
   color: white;
-  width: 97.4px;
+  width: 23%;
   text-align: center;
   text-decoration: none;
   display: inline-block;
@@ -64,6 +66,20 @@ button:disabled {
 
 .gold-button {
   background-color: gold;
+  border: none;
+  color: black;
+  width: 300px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 2px 2px;
+  cursor: pointer;
+  padding: 10px;
+}
+
+.diamond-button {
+  background-color: aqua;
   border: none;
   color: black;
   width: 300px;
