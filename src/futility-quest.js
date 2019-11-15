@@ -242,9 +242,9 @@ class Game extends React.Component {
 
   buyClicker(index, delta) {
     let clickElement = this.state.clickerArray[index];
-    //   let clickName = clickElement.name;
-    //    let objMatch = this.state.clickerArray.find(obj => obj.name === clickName);
-
+    /*
+    
+    */
     if (index !== 0) {
       let clickElementPrevious = this.state.clickerArray[index - 1];
       if (delta === "all") {
