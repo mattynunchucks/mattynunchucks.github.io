@@ -96,19 +96,20 @@ class Game extends React.Component {
         {
           name: "Diamonds",
           total: 0,
-          unlocked: true,
-          upgradeMultiplier: 0.5
+          unlocked: false,
+          incrementBy: 0.1,
+          upgradeMultiplier: 1
         }
       ],
       upgradeArray: [
         {
           name: "Unlock Diamonds",
-          cost: 10,
+          cost: 100,
           affects: "Diamonds",
           type: "unlock",
           bought: false,
           value: 0.25,
-          visible: true
+          visible: false
         },
         {
           name: "Gold Booster",
@@ -193,7 +194,6 @@ class Game extends React.Component {
         }
       ],
       lastSave: new Date().getTime() / 1000
-
     };
     this.clickMultiplesArray = [10, 100, 1000, "all"];
     this.baseState = this.state;
@@ -236,6 +236,18 @@ class Game extends React.Component {
           return { clickerArray: this.state.clickerArray };
         });
       }
+    });
+    this.state.currencyArray.map(currencyElement => {
+      if (currencyElement.unlocked) {
+        currencyElement.total =
+          currencyElement.total +
+          currencyElement.incrementBy *
+            currencyElement.upgradeMultiplier *
+            timeToIncrement;
+      }
+      this.setState(prevState => {
+        return { currencyElement: this.state.currencyArray };
+      });
     });
     this.checkForUnlocks();
   }
@@ -312,11 +324,13 @@ class Game extends React.Component {
   }
 
   buyDiamonds(delta) {
-    let diamondElement = this.state.diamondArray[0];
+    let diamondElement = this.state.currencyArray.find(
+      obj => obj.name === "Diamonds"
+    );
     diamondElement.total =
       diamondElement.total + delta * diamondElement.upgradeMultiplier;
     this.setState({
-      diamondArray: this.state.diamondArray
+      currencyArray: this.state.currencyArray
     });
   }
 
@@ -332,10 +346,12 @@ class Game extends React.Component {
     );
     let objMatch = this.state.clickerArray.find(obj => obj.name === "Jewelers");
     if (objMatch.total >= 10000) {
-      let diamondElement = this.state.diamondArray[0];
-      diamondElement.unlocked = true;
+      let diamondElement = this.state.currencyArray.find(
+        obj => obj.name === "Diamonds"
+      );
+      diamondElement.visible = true;
       this.setState({
-        diamondArray: this.state.diamondArray
+        currencyArray: this.state.currencyArray
       });
     }
     this.setState({
@@ -391,6 +407,21 @@ class Game extends React.Component {
             Reset Game
           </button>
         </div>
+        {/*<div>
+          {this.state.currencyArray.map(currencyElement => (
+            <div>
+              {currencyElement.unlocked && (
+                <button
+                  className={currencyElement.name.toLowerCase() + "-button"}
+                  id={currencyElement.name}
+                  onClick={() => this.buyDiamonds(1)}
+                >
+                  {currencyElement.name} ({currencyElement.total.toFixed(2)})
+                </button>
+              )}
+            </div>
+          ))}
+              </div>*/}
         <div className="buttons">
           <p className="buttons-header">Clickers</p>
           {this.state.clickerArray.map((clickElement, index) => (
