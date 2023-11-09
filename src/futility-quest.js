@@ -14,6 +14,7 @@ class Game extends React.Component {
           total: 0,
           unlocked: true,
           cost: 0,
+          baseCost: 0,
           incrementBy: 0.5,
           upgradeMultiplier: 1
         },
@@ -22,6 +23,7 @@ class Game extends React.Component {
           total: 0,
           unlocked: true,
           cost: 30,
+          baseCost: 30,
           incrementBy: 0.4,
           upgradeMultiplier: 1
         },
@@ -30,6 +32,7 @@ class Game extends React.Component {
           total: 0,
           unlocked: false,
           cost: 50,
+          baseCost: 50,
           incrementBy: 0.3,
           upgradeMultiplier: 1
         },
@@ -38,6 +41,7 @@ class Game extends React.Component {
           total: 0,
           unlocked: false,
           cost: 500,
+          baseCost: 0,
           incrementBy: 0.2,
           upgradeMultiplier: 1
         },
@@ -46,7 +50,7 @@ class Game extends React.Component {
           total: 0,
           unlocked: false,
           cost: 1000,
-          costs: "Blacksmiths",
+          baseCost: 1000,
           incrementBy: 0.15,
           upgradeMultiplier: 1
         },
@@ -55,7 +59,7 @@ class Game extends React.Component {
           total: 0,
           unlocked: false,
           cost: 10000000,
-          costs: "Jewelers",
+          baseCost: 10000000,
           incrementBy: 0.15,
           upgradeMultiplier: 1
         },
@@ -64,7 +68,7 @@ class Game extends React.Component {
           total: 0,
           unlocked: false,
           cost: 1000000000,
-          costs: "Knights",
+          baseCost: 1000000000,
           incrementBy: 0.1,
           upgradeMultiplier: 1
         },
@@ -73,6 +77,7 @@ class Game extends React.Component {
           total: 0,
           unlocked: false,
           cost: 100000,
+          baseCost: 100000,
           incrementBy: 0.1,
           upgradeMultiplier: 1
         },
@@ -81,6 +86,7 @@ class Game extends React.Component {
           total: 0,
           unlocked: false,
           cost: 1000000,
+          baseCost: 1000000,
           incrementBy: 0.1,
           upgradeMultiplier: 1
         }
@@ -280,6 +286,9 @@ class Game extends React.Component {
       let clickElementNext = this.state.clickerArray[index + 2];
       clickElementNext.unlocked = true;
     }
+    clickElement.cost =
+      this.state.clickerArray[index].baseCost +
+      (this.state.clickerArray[index].total + 1.05);
     this.setState({
       clickerArray: this.state.clickerArray
     });
