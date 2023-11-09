@@ -29,7 +29,7 @@ class Game extends React.Component {
           name: "Farmers",
           total: 0,
           unlocked: false,
-          cost: 45,
+          cost: 50,
           incrementBy: 0.3,
           upgradeMultiplier: 1
         },
@@ -37,7 +37,7 @@ class Game extends React.Component {
           name: "Blacksmith",
           total: 0,
           unlocked: false,
-          cost: 100,
+          cost: 500,
           incrementBy: 0.2,
           upgradeMultiplier: 1
         },
@@ -45,7 +45,7 @@ class Game extends React.Component {
           name: "Jewelers",
           total: 0,
           unlocked: false,
-          cost: 500,
+          cost: 1000,
           costs: "Blacksmiths",
           incrementBy: 0.15,
           upgradeMultiplier: 1
@@ -54,7 +54,7 @@ class Game extends React.Component {
           name: "Knights",
           total: 0,
           unlocked: false,
-          cost: 1000,
+          cost: 10000000,
           costs: "Jewelers",
           incrementBy: 0.15,
           upgradeMultiplier: 1
@@ -63,7 +63,7 @@ class Game extends React.Component {
           name: "Barons",
           total: 0,
           unlocked: false,
-          cost: 10000,
+          cost: 1000000000,
           costs: "Knights",
           incrementBy: 0.1,
           upgradeMultiplier: 1
@@ -232,12 +232,12 @@ class Game extends React.Component {
                 clickElement.upgradeMultiplier *
                 timeToIncrement);
         }
-        this.setState(prevState => {
+        this.setState((prevState) => {
           return { clickerArray: this.state.clickerArray };
         });
       }
     });
-    this.state.currencyArray.map(currencyElement => {
+    this.state.currencyArray.map((currencyElement) => {
       if (currencyElement.unlocked) {
         currencyElement.total =
           currencyElement.total +
@@ -245,7 +245,7 @@ class Game extends React.Component {
             currencyElement.upgradeMultiplier *
             timeToIncrement;
       }
-      this.setState(prevState => {
+      this.setState((prevState) => {
         return { currencyElement: this.state.currencyArray };
       });
     });
@@ -299,7 +299,9 @@ class Game extends React.Component {
     let upgradeValue = upgradeElement.value;
     let upgradeAffects = upgradeElement.affects;
 
-    let goldElement = this.state.clickerArray.find(obj => obj.name === "Gold");
+    let goldElement = this.state.clickerArray.find(
+      (obj) => obj.name === "Gold"
+    );
     let diamondElement = this.state.diamondArray[0];
     if (diamondElement.total >= upgradeCost) {
       this.setNewDiamondTotal(-upgradeElement.cost);
@@ -315,7 +317,7 @@ class Game extends React.Component {
 
   setNewUpgradeMultiplier(name, delta) {
     //let clickElement = this.state.clickerArray[index];
-    let clickElement = this.state.clickerArray.find(obj => obj.name === name);
+    let clickElement = this.state.clickerArray.find((obj) => obj.name === name);
     console.log(clickElement);
     clickElement.upgradeMultiplier = clickElement.upgradeMultiplier + delta;
     this.setState({
@@ -325,7 +327,7 @@ class Game extends React.Component {
 
   buyDiamonds(delta) {
     let diamondElement = this.state.currencyArray.find(
-      obj => obj.name === "Diamonds"
+      (obj) => obj.name === "Diamonds"
     );
     diamondElement.total =
       diamondElement.total + delta * diamondElement.upgradeMultiplier;
@@ -338,16 +340,18 @@ class Game extends React.Component {
     let upgradeArray = this.state.upgradeArray;
     let goldElement = this.state.clickerArray[0];
     upgradeArray.forEach(
-      upgradeElement =>
+      (upgradeElement) =>
         (upgradeElement.visible =
           (goldElement.total >= upgradeElement.cost &&
             !upgradeElement.bought) ||
           upgradeElement.visible)
     );
-    let objMatch = this.state.clickerArray.find(obj => obj.name === "Jewelers");
+    let objMatch = this.state.clickerArray.find(
+      (obj) => obj.name === "Jewelers"
+    );
     if (objMatch.total >= 10000) {
       let diamondElement = this.state.currencyArray.find(
-        obj => obj.name === "Diamonds"
+        (obj) => obj.name === "Diamonds"
       );
       diamondElement.visible = true;
       this.setState({
@@ -367,7 +371,7 @@ class Game extends React.Component {
       {
         lastSave: saveTime
       },
-      function() {
+      function () {
         let objJsonStr = JSON.stringify(this.state);
         let objJsonB64 = Buffer.from(objJsonStr).toString("base64");
         cookies.set("saveData", objJsonB64, {
@@ -449,7 +453,7 @@ class Game extends React.Component {
                     </button>
                     <div className="multiple-click-container">
                       {index > 0 &&
-                        this.clickMultiplesArray.map(multiple => (
+                        this.clickMultiplesArray.map((multiple) => (
                           <button
                             className="multiple-click-button"
                             id={clickElement.name + "_" + multiple}
