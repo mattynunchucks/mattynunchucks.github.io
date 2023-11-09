@@ -288,7 +288,7 @@ class Game extends React.Component {
     }
     clickElement.cost =
       this.state.clickerArray[index].baseCost +
-      this.state.clickerArray[index].total * 1.05;
+      this.state.clickerArray[index].total * 1.15;
     this.setState({
       clickerArray: this.state.clickerArray
     });
