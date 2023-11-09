@@ -58,8 +58,8 @@ class Game extends React.Component {
           name: "Knights",
           total: 0,
           unlocked: false,
-          cost: 10000000,
-          baseCost: 10000000,
+          cost: 10000,
+          baseCost: 10000,
           incrementBy: 0.15,
           upgradeMultiplier: 1
         },
@@ -67,8 +67,8 @@ class Game extends React.Component {
           name: "Barons",
           total: 0,
           unlocked: false,
-          cost: 1000000000,
-          baseCost: 1000000000,
+          cost: 15000,
+          baseCost: 15000,
           incrementBy: 0.1,
           upgradeMultiplier: 1
         },
@@ -76,8 +76,8 @@ class Game extends React.Component {
           name: "Earls",
           total: 0,
           unlocked: false,
-          cost: 100000,
-          baseCost: 100000,
+          cost: 25000,
+          baseCost: 25000,
           incrementBy: 0.1,
           upgradeMultiplier: 1
         },
@@ -85,8 +85,8 @@ class Game extends React.Component {
           name: "Counts",
           total: 0,
           unlocked: false,
-          cost: 1000000,
-          baseCost: 1000000,
+          cost: 50000,
+          baseCost: 50000,
           incrementBy: 0.1,
           upgradeMultiplier: 1
         }
