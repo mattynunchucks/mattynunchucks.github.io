@@ -21,6 +21,8 @@ class Game extends React.Component {
         {
           name: "Peasants",
           total: 0,
+          boughtTotal: 0,
+          earnedTotal: 0,
           unlocked: true,
           cost: 30,
           baseCost: 30,
@@ -455,7 +457,7 @@ class Game extends React.Component {
                       {clickElement.name} ({clickElement.total.toFixed(2)})
                       {index > 0 && (
                         <p className="click-button-cost">
-                          {clickElement.cost}{" "}
+                          {clickElement.cost.toFixed(2)}{" "}
                           {this.state.clickerArray[index - 1].name}
                         </p>
                       )}
