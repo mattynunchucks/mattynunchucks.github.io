@@ -1,6 +1,8 @@
 # futility-quest
 Created with CodeSandbox
 
+https://mattynunchucks.github.io/
+
 
 Todo:
 differentiate between bought clickers and ones earned through higher tier clickers
