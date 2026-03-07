@@ -1,20 +1,19 @@
 {
-  "name": "cosmogenesis",
+  "name": "universe-game",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.html",
+  "private": true,
+  "type": "module",
   "scripts": {
-    "start": "parcel index.html --open",
-    "build": "parcel build index.html"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   },
   "dependencies": {
-    "react": "16.11.0",
-    "react-dom": "16.11.0",
-    "universal-cookie": "4.0.2"
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
   },
   "devDependencies": {
-    "@babel/core": "7.2.0",
-    "parcel-bundler": "^1.6.1"
-  },
-  "keywords": []
+    "@vitejs/plugin-react": "^4.3.1",
+    "vite": "^5.4.2"
+  }
 }
