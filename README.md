@@ -1,3 +1,1 @@
 # universe-game
-
-wow
