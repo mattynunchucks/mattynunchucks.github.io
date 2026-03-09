@@ -28,9 +28,9 @@ function buildTheme(darkMode) {
     bg:        "#080c14",
     bgCard:    "#0a1020",
     border:    "#1a2a40",
-    text:      "#c8d8e8",
-    textDim:   "#6688bb",
-    textFaint: "#4466aa",
+    text:      "#eaf4ff",
+    textDim:   "#99bbdd",
+    textFaint: "#6688bb",
     starfield: "radial-gradient(1px 1px at 15% 25%, #ffffff22 0%, transparent 100%), radial-gradient(1px 1px at 55% 75%, #ffffff15 0%, transparent 100%), radial-gradient(1px 1px at 85% 15%, #ffffff1a 0%, transparent 100%)",
   } : {
     bg:        "#eef2f7",
@@ -60,7 +60,7 @@ export default function UniverseGame() {
 
   const [tab,                 setTab]                 = useState("game");
   const [prevTab,             setPrevTab]             = useState("game");
-  const [fontScale,           setFontScale]           = useState(1);
+  const [fontScale,           setFontScale]           = useState(1.2);
   const [darkMode,            setDarkMode]            = useState(true);
   const [showPurchased,       setShowPurchased]       = useState(false);
   const [showPrestigeConfirm, setShowPrestigeConfirm] = useState(false);
