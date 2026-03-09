@@ -1,3 +1,6 @@
 [submodule "universe-game"]
 	path = universe-game
 	url = https://github.com/mattynunchucks/universe-game.git
+[submodule "cosmogenesis"]
+	path = cosmogenesis
+	url = https://github.com/mattynunchucks/universe-game.git
