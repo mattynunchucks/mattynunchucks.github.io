@@ -58,6 +58,9 @@ export const UPGRADES = [
   { id: "global3",    name: "Cosmic Resonance",     desc: "All production ×3",               cost: [0,  30],  tier: -1, type: "global",  value: 3  },
   { id: "global5",    name: "Big Bang Echo",         desc: "All production ×5",               cost: [0, 100],  tier: -1, type: "global",  value: 5  },
 
+  // ── Auto-upgrade ─────────────────────────────────────────────────────────────
+  { id: "auto_upgrade", name: "Quantum Autosynthesis", desc: "Automatically purchases all Quark-cost upgrades when affordable", cost: [0, 10], tier: -1, type: "autoupgrade", value: 1 },
+
   // ── Assemblers ───────────────────────────────────────────────────────────────
   { id: "auto0",      name: "Quark Assembler",      desc: "Auto-buys Quark converters",      cost: [0,   2],  tier: 0,  type: "autobuy", value: 0  },
   { id: "auto1",      name: "Proton Assembler",     desc: "Auto-buys Proton converters",     cost: [0,   4],  tier: 1,  type: "autobuy", value: 1  },

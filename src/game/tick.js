@@ -1,11 +1,12 @@
 import { ELEMENTS, BASE_RATE } from "../data/elements";
+import { UPGRADES } from "../data/upgrades";
 import { DISCOVERIES } from "../data/discoveries";
 import { CIV_TIERS, CIV_ERAS, CIV_BASE_RATE } from "../data/civilisation";
 import { calcStats, prestigeMultiplier, calcCivMindBonus } from "./stats";
 import { maxConverters, converterCost, civMaxConverters } from "./converters";
 
 export function applyTick(state, dt) {
-  const { prodMult, globalMult, autobuyTiers } = calcStats(
+  const { prodMult, globalMult, autobuyTiers, autoUpgrade } = calcStats(
     state.purchasedUpgrades,
     state.universeOverclockCount || 0
   );
@@ -32,6 +33,23 @@ export function applyTick(state, dt) {
       if (amounts[payTier] < cost) break;
       amounts[payTier] -= cost;
       converters[tier] += 1;
+    }
+  }
+
+  // ── Auto-upgrade (Quantum Autosynthesis) ───────────────────────────────────
+  let purchasedUpgrades = state.purchasedUpgrades;
+  if (autoUpgrade) {
+    const newlyBought = [];
+    for (const up of UPGRADES) {
+      if (up.cost[1] !== 0) continue;           // quark-cost only
+      if (purchasedUpgrades.includes(up.id)) continue;
+      if (amounts[0] >= up.cost[0]) {
+        amounts[0] -= up.cost[0];
+        newlyBought.push(up.id);
+      }
+    }
+    if (newlyBought.length > 0) {
+      purchasedUpgrades = [...purchasedUpgrades, ...newlyBought];
     }
   }
 
@@ -100,7 +118,7 @@ export function applyTick(state, dt) {
 
   return {
     ...state,
-    amounts, converters,
+    amounts, converters, purchasedUpgrades,
     totalMindsEver, totalQuarksEarned,
     firedDiscoveries: newFired,
     pendingDiscovery: newDiscovery,
