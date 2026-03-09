@@ -25,5 +25,9 @@ export function buildInitState() {
     totalCultureEver:       0,
     pendingEra:             null,
     firedEras:              [],
+    eraChoices:             {},
+    purchasedPolicies:      [],
+    darkAgesCount:          0,
+    pendingEraChoice:       null,
   };
 }

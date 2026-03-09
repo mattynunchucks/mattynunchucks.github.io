@@ -1,19 +1,65 @@
-import { CIV_TIERS, CIV_ERAS, CIV_BASE_RATE } from "../data/civilisation";
+import { useState } from "react";
+import { CIV_TIERS, CIV_ERAS, CIV_POLICIES, CIV_BASE_RATE } from "../data/civilisation";
 import { civConverterCost, civMaxConverters } from "../game/converters";
-import { calcCivMindBonus } from "../game/stats";
+import { calcCivMindBonus, calcCivBonuses } from "../game/stats";
 import { fmt } from "../utils/format";
 
-export default function CivilisationTab({ state, theme, buyCivConverter, dismissEra }) {
-  const civMindBonus = calcCivMindBonus(state.totalCultureEver || 0);
-  const cultureRate  = CIV_TIERS.reduce((sum, _, i) =>
-    sum + (state.civConverters[i] > 0 ? state.civConverters[i] * CIV_BASE_RATE * Math.pow(1.5, i) : 0), 0
+export default function CivilisationTab({ state, theme, buyCivConverter, dismissEra, chooseEra, handleBuyPolicy, doDarkAges }) {
+  const [showDarkAgesConfirm, setShowDarkAgesConfirm] = useState(false);
+
+  const eraChoices       = state.eraChoices       || {};
+  const purchasedPolicies= state.purchasedPolicies || [];
+  const darkAgesCount    = state.darkAgesCount     || 0;
+  const firedEras        = state.firedEras         || [];
+
+  const { civProdMult, civGlobalMult, extraMindBonus } = calcCivBonuses(eraChoices, purchasedPolicies, darkAgesCount);
+  const civMindBonus = calcCivMindBonus(state.totalCultureEver || 0, eraChoices, purchasedPolicies, darkAgesCount);
+
+  const cultureRate = CIV_TIERS.reduce((sum, _, i) =>
+    sum + (state.civConverters[i] > 0
+      ? state.civConverters[i] * CIV_BASE_RATE * Math.pow(1.5, i) * civProdMult[i] * civGlobalMult
+      : 0), 0
   );
-  const nextEra = CIV_ERAS.find(e => !(state.firedEras || []).includes(e.id));
+
+  const nextEra = CIV_ERAS.find(e => !firedEras.includes(e.id));
+  const allErasDone = firedEras.length === CIV_ERAS.length;
+  const canDarkAges = allErasDone;
+
+  // ── Era choice modal ────────────────────────────────────────────────────────
+  if (state.pendingEraChoice) {
+    const era = state.pendingEraChoice;
+    return (
+      <div style={{ background: "#0e0b05", border: "1px solid #c4a35a88", borderRadius: "8px", padding: "20px" }}>
+        <div style={{ textAlign: "center", marginBottom: "16px" }}>
+          <div style={{ fontSize: "2rem", marginBottom: "6px" }}>{era.emoji}</div>
+          <div style={{ fontSize: "0.52rem", color: "#c4a35a", letterSpacing: "0.2em", marginBottom: "4px" }}>✦ NEW ERA — CHOOSE A PATH</div>
+          <div style={{ fontSize: "0.8rem", color: "#eef4ff", fontWeight: "bold", marginBottom: "6px" }}>{era.title}</div>
+          <div style={{ fontSize: "0.55rem", color: "#9aaabb", fontStyle: "italic", lineHeight: 1.6 }}>{era.flavour}</div>
+        </div>
+        <div style={{ display: "flex", gap: "10px" }}>
+          {era.choices.map(choice => (
+            <button key={choice.id} onClick={() => chooseEra(era.id, choice.id)} style={{
+              flex: 1, background: "#1a1208", border: "1px solid #c4a35a55",
+              borderRadius: "7px", padding: "14px 10px", cursor: "pointer",
+              fontFamily: "'Courier New', monospace", textAlign: "center",
+              transition: "all 0.15s",
+            }}
+              onMouseEnter={e => e.currentTarget.style.borderColor = "#c4a35a"}
+              onMouseLeave={e => e.currentTarget.style.borderColor = "#c4a35a55"}
+            >
+              <div style={{ fontSize: "0.65rem", color: "#c4a35a", fontWeight: "bold", marginBottom: "6px" }}>{choice.name}</div>
+              <div style={{ fontSize: "0.55rem", color: "#9aaabb", lineHeight: 1.5 }}>{choice.desc}</div>
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
       {/* Era notification banner */}
-      {state.pendingEra && (() => {
+      {state.pendingEra && !state.pendingEraChoice && (() => {
         const era = state.pendingEra;
         return (
           <div style={{
@@ -52,8 +98,18 @@ export default function CivilisationTab({ state, theme, buyCivConverter, dismiss
           <span style={{ fontSize: "0.6rem", color: "#a08840" }}>{fmt(state.culture || 0)} ({cultureRate > 0 ? `+${fmt(cultureRate)}/s` : "idle"})</span>
         </div>
         {civMindBonus > 0 && (
-          <div style={{ fontSize: "0.55rem", color: "#6bcb77", marginBottom: "8px" }}>
+          <div style={{ fontSize: "0.55rem", color: "#6bcb77", marginBottom: "4px" }}>
             ✦ Mind production +{Math.round(civMindBonus * 100)}%
+          </div>
+        )}
+        {darkAgesCount > 0 && (
+          <div style={{ fontSize: "0.52rem", color: "#aa88ff", marginBottom: "4px" }}>
+            🌑 Dark Ages ×{darkAgesCount} — culture ×{Math.pow(1.5, darkAgesCount).toFixed(2)}
+          </div>
+        )}
+        {civGlobalMult > 1 && (
+          <div style={{ fontSize: "0.52rem", color: "#c4a35a88", marginBottom: "6px" }}>
+            Culture mult: ×{civGlobalMult.toFixed(2)}
           </div>
         )}
         {nextEra && (
@@ -72,23 +128,25 @@ export default function CivilisationTab({ state, theme, buyCivConverter, dismiss
             </div>
           </>
         )}
-        {!nextEra && (state.firedEras || []).length === CIV_ERAS.length && (
-          <div style={{ fontSize: "0.55rem", color: "#c4a35a" }}>✦ All eras unlocked — the modern age dawns</div>
+        {allErasDone && (
+          <div style={{ fontSize: "0.55rem", color: "#c4a35a" }}>✦ All eras reached — the modern age dawns</div>
         )}
       </div>
 
       {/* Civ tier rows */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "16px" }}>
         {CIV_TIERS.map((tier, i) => {
+          const eraLocked    = tier.requiresEra && !firedEras.includes(tier.requiresEra);
+          const reqEra       = tier.requiresEra ? CIV_ERAS.find(e => e.id === tier.requiresEra) : null;
           const convCount    = state.civConverters[i] || 0;
           const cap          = civMaxConverters(i, state.civConverters);
           const cost         = civConverterCost(i, convCount);
           const payAmount    = i === 0 ? state.amounts[8] : (state.civAmounts[i - 1] || 0);
-          const canAfford    = payAmount >= cost && convCount < cap;
+          const canAfford    = !eraLocked && payAmount >= cost && convCount < cap;
           const atCap        = convCount >= cap && cap !== Infinity;
           const ownAmount    = state.civAmounts[i] || 0;
-          const rate         = convCount > 0 ? convCount * CIV_BASE_RATE * Math.pow(1.5, i) : 0;
-          const isLocked     = i > 0 && (state.civConverters[i - 1] || 0) === 0;
+          const rate         = convCount > 0 ? convCount * CIV_BASE_RATE * Math.pow(1.5, i) * civProdMult[i] * civGlobalMult : 0;
+          const isLocked     = eraLocked || (i > 0 && (state.civConverters[i - 1] || 0) === 0);
           const producesName = i === 0 ? "Culture" : tier.name;
           const costsName    = i === 0 ? "Minds" : CIV_TIERS[i - 1].name;
 
@@ -107,17 +165,25 @@ export default function CivilisationTab({ state, theme, buyCivConverter, dismiss
                   <span style={{ fontSize: "0.67rem", fontWeight: "bold", color: tier.color }}>{tier.name}</span>
                   <span style={{ fontSize: "0.48rem", color: "#6a5828" }}>{tier.desc}</span>
                 </div>
-                <div style={{ display: "flex", gap: "12px", marginTop: "3px", alignItems: "baseline" }}>
-                  <span style={{ fontSize: "0.58rem", color: "#b8900a" }}>
-                    {fmt(ownAmount)} <span style={{ color: "#7a6020", fontSize: "0.5rem" }}>{producesName}</span>
-                  </span>
-                  {rate > 0 && <span style={{ fontSize: "0.52rem", color: "#7a6020" }}>+{fmt(rate)}/s</span>}
-                </div>
-                <div style={{ fontSize: "0.5rem", color: "#5a4818", marginTop: "2px" }}>
-                  {`Cost: ${fmt(cost)} ${costsName}`}
-                  {i > 0 && cap !== Infinity && ` · cap: ${cap}`}
-                  {i > 0 && <span style={{ color: "#4a3808" }}> · have: {fmt(payAmount)}</span>}
-                </div>
+                {eraLocked ? (
+                  <div style={{ fontSize: "0.5rem", color: "#5a4818", marginTop: "2px" }}>
+                    🔒 Requires: {reqEra?.title || tier.requiresEra}
+                  </div>
+                ) : (
+                  <div style={{ display: "flex", gap: "12px", marginTop: "3px", alignItems: "baseline" }}>
+                    <span style={{ fontSize: "0.58rem", color: "#b8900a" }}>
+                      {fmt(ownAmount)} <span style={{ color: "#7a6020", fontSize: "0.5rem" }}>{producesName}</span>
+                    </span>
+                    {rate > 0 && <span style={{ fontSize: "0.52rem", color: "#7a6020" }}>+{fmt(rate)}/s</span>}
+                  </div>
+                )}
+                {!eraLocked && (
+                  <div style={{ fontSize: "0.5rem", color: "#5a4818", marginTop: "2px" }}>
+                    {`Cost: ${fmt(cost)} ${costsName}`}
+                    {i > 0 && cap !== Infinity && ` · cap: ${cap}`}
+                    {i > 0 && <span style={{ color: "#4a3808" }}> · have: {fmt(payAmount)}</span>}
+                  </div>
+                )}
               </div>
               <button
                 onClick={() => buyCivConverter(i)}
@@ -138,21 +204,108 @@ export default function CivilisationTab({ state, theme, buyCivConverter, dismiss
         })}
       </div>
 
+      {/* Policies */}
+      {(state.civConverters[0] > 0) && (
+        <div style={{ marginBottom: "16px" }}>
+          <div style={{ fontSize: "0.52rem", color: "#c4a35a", letterSpacing: "0.16em", marginBottom: "8px" }}>📜 POLICIES</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+            {CIV_POLICIES.map(pol => {
+              const owned     = purchasedPolicies.includes(pol.id);
+              const canAfford = !owned && (state.culture || 0) >= pol.cost;
+              return (
+                <div key={pol.id} style={{
+                  display: "grid", gridTemplateColumns: "1fr auto",
+                  alignItems: "center", gap: "10px",
+                  background: owned ? "#0a0e06" : (canAfford ? "#120f06" : "#0a0a08"),
+                  border: `1px solid ${owned ? "#3a5030" : (canAfford ? "#c4a35a55" : "#1a1a10")}`,
+                  borderRadius: "6px", padding: "8px 12px",
+                  opacity: owned ? 0.7 : 1,
+                }}>
+                  <div>
+                    <div style={{ display: "flex", gap: "8px", alignItems: "baseline" }}>
+                      <span style={{ fontSize: "0.6rem", color: owned ? "#6bcb77" : "#c4a35a", fontWeight: "bold" }}>{pol.name}</span>
+                      <span style={{ fontSize: "0.5rem", color: "#7a6828" }}>{pol.desc}</span>
+                    </div>
+                    <div style={{ fontSize: "0.48rem", color: "#5a4818", marginTop: "2px" }}>
+                      {owned ? "✓ Enacted" : `Cost: ${fmt(pol.cost)} Culture`}
+                    </div>
+                  </div>
+                  {!owned && (
+                    <button onClick={() => handleBuyPolicy(pol)} disabled={!canAfford} style={{
+                      background: canAfford ? "#c4a35a22" : "transparent",
+                      border: `1px solid ${canAfford ? "#c4a35a" : "#3a2a10"}`,
+                      borderRadius: "5px", color: canAfford ? "#c4a35a" : "#4a3a18",
+                      padding: "4px 10px", cursor: canAfford ? "pointer" : "not-allowed",
+                      fontSize: "0.52rem", fontFamily: "'Courier New', monospace",
+                    }}>ENACT</button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Dark Ages */}
+      {canDarkAges && (
+        <div style={{ borderTop: "1px solid #2a2010", paddingTop: "14px", marginBottom: "16px" }}>
+          <div style={{ fontSize: "0.52rem", color: "#aa88ff", letterSpacing: "0.16em", marginBottom: "8px" }}>🌑 DARK AGES</div>
+          <div style={{ background: "#0a0810", border: "1px solid #aa88ff44", borderRadius: "6px", padding: "10px 14px", marginBottom: "8px" }}>
+            <div style={{ fontSize: "0.57rem", color: "#cc99ff", marginBottom: "4px" }}>Collapse and Rebirth</div>
+            <div style={{ fontSize: "0.52rem", color: "#7a60aa", lineHeight: 1.6 }}>
+              Reset your entire civilisation — all tiers, culture, eras, and policies lost.
+              In return, all future culture production is permanently ×{Math.pow(1.5, darkAgesCount + 1).toFixed(2)}.
+            </div>
+            {darkAgesCount > 0 && (
+              <div style={{ fontSize: "0.5rem", color: "#aa88ff", marginTop: "4px" }}>
+                Current bonus: ×{Math.pow(1.5, darkAgesCount).toFixed(2)} (after reset: ×{Math.pow(1.5, darkAgesCount + 1).toFixed(2)})
+              </div>
+            )}
+          </div>
+          {!showDarkAgesConfirm ? (
+            <button onClick={() => setShowDarkAgesConfirm(true)} style={{
+              background: "#1a0a28", border: "1px solid #aa88ff88",
+              borderRadius: "5px", color: "#aa88ff", padding: "7px 16px",
+              cursor: "pointer", fontSize: "0.55rem", letterSpacing: "0.12em",
+              fontFamily: "'Courier New', monospace",
+            }}>ENTER DARK AGES</button>
+          ) : (
+            <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+              <span style={{ fontSize: "0.52rem", color: "#cc8888" }}>Are you sure? This cannot be undone.</span>
+              <button onClick={() => { doDarkAges(); setShowDarkAgesConfirm(false); }} style={{
+                background: "#2a0a0a", border: "1px solid #cc4444",
+                borderRadius: "5px", color: "#cc4444", padding: "5px 12px",
+                cursor: "pointer", fontSize: "0.52rem", fontFamily: "'Courier New', monospace",
+              }}>CONFIRM</button>
+              <button onClick={() => setShowDarkAgesConfirm(false)} style={{
+                background: "transparent", border: "1px solid #3a2a10",
+                borderRadius: "5px", color: "#6a5020", padding: "5px 12px",
+                cursor: "pointer", fontSize: "0.52rem", fontFamily: "'Courier New', monospace",
+              }}>CANCEL</button>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Era history */}
-      {(state.firedEras || []).length > 0 && (
-        <div style={{ marginTop: "16px", borderTop: "1px solid #2a2010", paddingTop: "12px" }}>
+      {firedEras.length > 0 && (
+        <div style={{ marginTop: "4px", borderTop: "1px solid #2a2010", paddingTop: "12px" }}>
           <div style={{ fontSize: "0.5rem", color: "#6a5020", letterSpacing: "0.16em", marginBottom: "8px" }}>📜 ERA HISTORY</div>
           <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-            {CIV_ERAS.filter(e => (state.firedEras || []).includes(e.id)).map(era => (
-              <div key={era.id} style={{ display: "flex", alignItems: "center", gap: "8px", padding: "5px 8px", background: "#0a0805", borderRadius: "4px" }}>
-                <span style={{ fontSize: "0.9rem" }}>{era.emoji}</span>
-                <div>
-                  <div style={{ fontSize: "0.58rem", color: "#c4a35a" }}>{era.title}</div>
-                  <div style={{ fontSize: "0.5rem", color: "#6a5828", fontStyle: "italic" }}>{era.flavour}</div>
+            {CIV_ERAS.filter(e => firedEras.includes(e.id)).map(era => {
+              const chosenId = eraChoices[era.id];
+              const choice   = chosenId ? era.choices.find(c => c.id === chosenId) : null;
+              return (
+                <div key={era.id} style={{ display: "flex", alignItems: "center", gap: "8px", padding: "5px 8px", background: "#0a0805", borderRadius: "4px" }}>
+                  <span style={{ fontSize: "0.9rem" }}>{era.emoji}</span>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: "0.58rem", color: "#c4a35a" }}>{era.title}</div>
+                    {choice && <div style={{ fontSize: "0.48rem", color: "#7a8040", marginTop: "1px" }}>▶ {choice.name}: {choice.desc}</div>}
+                  </div>
+                  <div style={{ fontSize: "0.5rem", color: "#4bcb55" }}>+{Math.round(era.mindBonus * 100)}% Minds</div>
                 </div>
-                <div style={{ marginLeft: "auto", fontSize: "0.5rem", color: "#4bcb55" }}>+{Math.round(era.mindBonus * 100)}% Minds</div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}

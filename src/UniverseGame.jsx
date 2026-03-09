@@ -113,6 +113,48 @@ export default function UniverseGame() {
     setState(s => ({ ...s, pendingEra: null }));
   }, []);
 
+  const chooseEra = useCallback((eraId, choiceId) => {
+    setState(s => ({
+      ...s,
+      eraChoices: { ...(s.eraChoices || {}), [eraId]: choiceId },
+      pendingEraChoice: null,
+      pendingEra: null,
+    }));
+  }, []);
+
+  const handleBuyPolicy = useCallback((pol) => {
+    setState(s => {
+      if ((s.purchasedPolicies || []).includes(pol.id)) return s;
+      if ((s.culture || 0) < pol.cost) return s;
+      return {
+        ...s,
+        culture: s.culture - pol.cost,
+        purchasedPolicies: [...(s.purchasedPolicies || []), pol.id],
+        log: [`📜 Policy enacted: ${pol.name}`, ...s.log.slice(0, 49)],
+      };
+    });
+  }, []);
+
+  const doDarkAges = useCallback(() => {
+    setState(s => {
+      const count = (s.darkAgesCount || 0) + 1;
+      return {
+        ...s,
+        civAmounts:        s.civAmounts.map(() => 0),
+        civConverters:     s.civConverters.map(() => 0),
+        culture:           0,
+        totalCultureEver:  0,
+        firedEras:         [],
+        eraChoices:        {},
+        purchasedPolicies: [],
+        pendingEra:        null,
+        pendingEraChoice:  null,
+        darkAgesCount:     count,
+        log: [`🌑 Dark Ages #${count} — civilisation resets, ×${Math.pow(1.5, count).toFixed(1)} culture bonus`, ...s.log.slice(0, 49)],
+      };
+    });
+  }, []);
+
   const unlockCiv = useCallback(() => {
     setState(s => {
       if (s.civUnlocked || s.totalMindsEver < CIV_UNLOCK_MINDS) return s;
@@ -208,6 +250,9 @@ export default function UniverseGame() {
         civUnlocked:            s.civUnlocked,
         totalCultureEver:       s.totalCultureEver || 0,
         firedEras:              s.firedEras || [],
+        eraChoices:             s.eraChoices || {},
+        purchasedPolicies:      s.purchasedPolicies || [],
+        darkAgesCount:          s.darkAgesCount || 0,
       };
     });
     setShowPrestigeConfirm(false);
@@ -428,6 +473,8 @@ export default function UniverseGame() {
           <CivilisationTab
             state={state} theme={theme}
             buyCivConverter={buyCivConverter} dismissEra={dismissEra}
+            chooseEra={chooseEra} handleBuyPolicy={handleBuyPolicy}
+            doDarkAges={doDarkAges}
           />
         )}
         {tab === "settings" && (

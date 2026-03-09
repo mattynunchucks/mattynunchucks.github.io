@@ -2,7 +2,7 @@ import { ELEMENTS, BASE_RATE } from "../data/elements";
 import { UPGRADES } from "../data/upgrades";
 import { DISCOVERIES } from "../data/discoveries";
 import { CIV_TIERS, CIV_ERAS, CIV_BASE_RATE } from "../data/civilisation";
-import { calcStats, prestigeMultiplier, calcCivMindBonus } from "./stats";
+import { calcStats, prestigeMultiplier, calcCivMindBonus, calcCivBonuses } from "./stats";
 import { maxConverters, converterCost, civMaxConverters } from "./converters";
 
 export function applyTick(state, dt) {
@@ -41,7 +41,7 @@ export function applyTick(state, dt) {
   if (autoUpgrade) {
     const newlyBought = [];
     for (const up of UPGRADES) {
-      if (up.cost[1] !== 0) continue;           // quark-cost only
+      if (up.cost[1] !== 0) continue;
       if (purchasedUpgrades.includes(up.id)) continue;
       if (amounts[0] >= up.cost[0]) {
         amounts[0] -= up.cost[0];
@@ -80,12 +80,15 @@ export function applyTick(state, dt) {
   // ── Civilisation tick ──────────────────────────────────────────────────────
   const civAmounts    = [...(state.civAmounts    || CIV_TIERS.map(() => 0))];
   const civConverters = [...(state.civConverters || CIV_TIERS.map(() => 0))];
+  const { civProdMult, civGlobalMult } = calcCivBonuses(
+    state.eraChoices || {}, state.purchasedPolicies || [], state.darkAgesCount || 0
+  );
   let cultureProduced = 0;
 
   if (state.civUnlocked) {
     for (let i = 0; i < CIV_TIERS.length; i++) {
       if (civConverters[i] > 0) {
-        const produced = civConverters[i] * CIV_BASE_RATE * Math.pow(1.5, i) * dt;
+        const produced = civConverters[i] * CIV_BASE_RATE * Math.pow(1.5, i) * civProdMult[i] * civGlobalMult * dt;
         civAmounts[i] += produced;
         if (i === 0) cultureProduced += produced;
       }
@@ -95,7 +98,7 @@ export function applyTick(state, dt) {
   const culture          = (state.culture || 0) + cultureProduced;
   const totalCultureEver = (state.totalCultureEver || 0) + cultureProduced;
 
-  const civMindBonus = calcCivMindBonus(totalCultureEver);
+  const civMindBonus = calcCivMindBonus(totalCultureEver, state.eraChoices, state.purchasedPolicies, state.darkAgesCount);
   if (civMindBonus > 0 && converters[8] > 0) {
     amounts[8] += converters[8] * BASE_RATE * prodMult[8] * globalMult * pMult * civMindBonus * dt;
   }
@@ -104,13 +107,15 @@ export function applyTick(state, dt) {
   const firedEras    = state.firedEras  || [];
   let newEra         = state.pendingEra || null;
   const newFiredEras = [...firedEras];
+  let pendingEraChoice = state.pendingEraChoice || null;
 
-  if (!newEra && state.civUnlocked) {
+  if (!newEra && !pendingEraChoice && state.civUnlocked) {
     for (const era of CIV_ERAS) {
       if (newFiredEras.includes(era.id)) continue;
       if (totalCultureEver >= era.at) {
         newEra = era;
         newFiredEras.push(era.id);
+        if (era.choices) pendingEraChoice = era;
         break;
       }
     }
@@ -124,6 +129,7 @@ export function applyTick(state, dt) {
     pendingDiscovery: newDiscovery,
     civAmounts, civConverters, culture, totalCultureEver,
     pendingEra: newEra, firedEras: newFiredEras,
+    pendingEraChoice,
     lastTick: Date.now(),
   };
 }
