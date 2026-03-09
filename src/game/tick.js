@@ -1,12 +1,12 @@
 import { ELEMENTS, BASE_RATE } from "../data/elements";
 import { UPGRADES } from "../data/upgrades";
 import { DISCOVERIES } from "../data/discoveries";
-import { CIV_TIERS, CIV_ERAS, CIV_BASE_RATE } from "../data/civilisation";
+import { CIV_TIERS, CIV_ERAS, CIV_BASE_RATE, CIV_POLICIES } from "../data/civilisation";
 import { calcStats, prestigeMultiplier, calcCivMindBonus, calcCivBonuses } from "./stats";
-import { maxConverters, converterCost, civMaxConverters } from "./converters";
+import { maxConverters, converterCost, civMaxConverters, civConverterCost } from "./converters";
 
 export function applyTick(state, dt) {
-  const { prodMult, globalMult, autobuyTiers, autoUpgrade } = calcStats(
+  const { prodMult, globalMult, autobuyTiers, autoUpgrade, civAssemble, civAutoPolicy, civArchive } = calcStats(
     state.purchasedUpgrades,
     state.universeOverclockCount || 0
   );
@@ -81,7 +81,7 @@ export function applyTick(state, dt) {
   const civAmounts    = [...(state.civAmounts    || CIV_TIERS.map(() => 0))];
   const civConverters = [...(state.civConverters || CIV_TIERS.map(() => 0))];
   const { civProdMult, civGlobalMult } = calcCivBonuses(
-    state.eraChoices || {}, state.purchasedPolicies || [], state.darkAgesCount || 0
+    state.eraChoices || {}, state.purchasedPolicies || [], state.darkAgesCount || 0, civArchive
   );
   let cultureProduced = 0;
 
@@ -95,10 +95,46 @@ export function applyTick(state, dt) {
     }
   }
 
-  const culture          = (state.culture || 0) + cultureProduced;
+  // ── Civ Assembler ──────────────────────────────────────────────────────────
+  if (civAssemble && state.civUnlocked) {
+    for (let i = 0; i < CIV_TIERS.length; i++) {
+      const tier = CIV_TIERS[i];
+      if (tier.requiresEra && !(state.firedEras || []).includes(tier.requiresEra)) continue;
+      let safety = 0;
+      while (safety++ < 100) {
+        const cap  = civMaxConverters(i, civConverters);
+        if (civConverters[i] >= cap) break;
+        const cost = civConverterCost(i, civConverters[i]);
+        if (i === 0) {
+          if (amounts[8] < cost) break;
+          amounts[8] -= cost;
+        } else {
+          if (civAmounts[i - 1] < cost) break;
+          civAmounts[i - 1] -= cost;
+        }
+        civConverters[i] += 1;
+      }
+    }
+  }
+
+  // ── Auto Policy ────────────────────────────────────────────────────────────
+  let purchasedPolicies = state.purchasedPolicies || [];
+  let culture           = (state.culture || 0) + cultureProduced;
+  if (civAutoPolicy && state.civUnlocked) {
+    const newPolicies = [];
+    for (const pol of CIV_POLICIES) {
+      if (purchasedPolicies.includes(pol.id)) continue;
+      if (culture >= pol.cost) {
+        culture -= pol.cost;
+        newPolicies.push(pol.id);
+      }
+    }
+    if (newPolicies.length > 0) purchasedPolicies = [...purchasedPolicies, ...newPolicies];
+  }
+
   const totalCultureEver = (state.totalCultureEver || 0) + cultureProduced;
 
-  const civMindBonus = calcCivMindBonus(totalCultureEver, state.eraChoices, state.purchasedPolicies, state.darkAgesCount);
+  const civMindBonus = calcCivMindBonus(totalCultureEver, state.eraChoices, state.purchasedPolicies, state.darkAgesCount, civArchive);
   if (civMindBonus > 0 && converters[8] > 0) {
     amounts[8] += converters[8] * BASE_RATE * prodMult[8] * globalMult * pMult * civMindBonus * dt;
   }
@@ -123,7 +159,7 @@ export function applyTick(state, dt) {
 
   return {
     ...state,
-    amounts, converters, purchasedUpgrades,
+    amounts, converters, purchasedUpgrades, purchasedPolicies,
     totalMindsEver, totalQuarksEarned,
     firedDiscoveries: newFired,
     pendingDiscovery: newDiscovery,

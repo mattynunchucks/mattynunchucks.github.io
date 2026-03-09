@@ -61,6 +61,12 @@ export const UPGRADES = [
   // ── Auto-upgrade ─────────────────────────────────────────────────────────────
   { id: "auto_upgrade", name: "Quantum Autosynthesis", desc: "Automatically purchases all Quark-cost upgrades when affordable", cost: [0, 10], tier: -1, type: "autoupgrade", value: 1 },
 
+  // ── Civilisation upgrades ─────────────────────────────────────────────────
+  { id: "civ_assemble", name: "Civilisation Assembler", desc: "Auto-buys all Civilisation tier converters when affordable",    cost: [0,  15], tier: -1, type: "civassemble", value: 1 },
+  { id: "civ_autopol",  name: "Auto Policy",            desc: "Automatically enacts Policies when you have enough Culture",    cost: [0,  20], tier: -1, type: "civautopol",  value: 1 },
+  { id: "civ_legacy",   name: "Cultural Legacy",        desc: "Purchased Policies survive Dark Ages resets",                  cost: [0,  25], tier: -1, type: "civlegacy",   value: 1 },
+  { id: "civ_archive",  name: "Grand Archive",          desc: "Era tech choices grant double their effect",                   cost: [0,  50], tier: -1, type: "civarchive",  value: 1 },
+
   // ── Assemblers ───────────────────────────────────────────────────────────────
   { id: "auto0",      name: "Quark Assembler",      desc: "Auto-buys Quark converters",      cost: [0,   2],  tier: 0,  type: "autobuy", value: 0  },
   { id: "auto1",      name: "Proton Assembler",     desc: "Auto-buys Proton converters",     cost: [0,   4],  tier: 1,  type: "autobuy", value: 1  },

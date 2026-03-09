@@ -137,7 +137,8 @@ export default function UniverseGame() {
 
   const doDarkAges = useCallback(() => {
     setState(s => {
-      const count = (s.darkAgesCount || 0) + 1;
+      const count      = (s.darkAgesCount || 0) + 1;
+      const hasLegacy  = (s.purchasedUpgrades || []).includes("civ_legacy");
       return {
         ...s,
         civAmounts:        s.civAmounts.map(() => 0),
@@ -146,11 +147,11 @@ export default function UniverseGame() {
         totalCultureEver:  0,
         firedEras:         [],
         eraChoices:        {},
-        purchasedPolicies: [],
+        purchasedPolicies: hasLegacy ? (s.purchasedPolicies || []) : [],
         pendingEra:        null,
         pendingEraChoice:  null,
         darkAgesCount:     count,
-        log: [`🌑 Dark Ages #${count} — civilisation resets, ×${Math.pow(1.5, count).toFixed(1)} culture bonus`, ...s.log.slice(0, 49)],
+        log: [`🌑 Dark Ages #${count} — civilisation resets, ×${Math.pow(1.5, count).toFixed(1)} culture bonus${hasLegacy ? " (policies kept)" : ""}`, ...s.log.slice(0, 49)],
       };
     });
   }, []);
