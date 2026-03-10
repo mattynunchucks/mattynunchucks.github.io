@@ -30,5 +30,7 @@ export function buildInitState() {
     darkAgesCount:          0,
     pendingEraChoice:       null,
     civEchoStudyLevel:      0,
+    cultureSurgeEndsAt:     0,
+    cultureSurgeUsed:       false,
   };
 }

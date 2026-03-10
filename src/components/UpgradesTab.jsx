@@ -40,6 +40,7 @@ export default function UpgradesTab({
             const owned = state.purchasedUpgrades.includes(up.id);
             if (owned && !showPurchased) return false;
             if (up.requiresTier && state.converters[up.requiresTier] < 1) return false;
+            if (up.requiresCiv && !state.civUnlocked) return false;
             return true;
           });
           if (visible.length === 0) return null;

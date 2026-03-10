@@ -25,6 +25,8 @@ export function calcStats(purchasedUpgrades, universeOverclockCount) {
   let civAutoPolicy= false;
   let civLegacy    = false;
   let civArchive   = false;
+  let civProdBonus = 1;
+  let civFestival  = false;
 
   for (const id of purchasedUpgrades) {
     const up = UPGRADES.find(u => u.id === id);
@@ -38,9 +40,11 @@ export function calcStats(purchasedUpgrades, universeOverclockCount) {
     if (up.type === "civautopol")  civAutoPolicy = true;
     if (up.type === "civlegacy")   civLegacy     = true;
     if (up.type === "civarchive")  civArchive    = true;
+    if (up.type === "civprod")     civProdBonus *= up.value;
+    if (up.type === "civfestival") civFestival   = true;
   }
 
-  return { clickMult, prodMult, globalMult, autobuyTiers, autoUpgrade, civAssemble, civAutoPolicy, civLegacy, civArchive };
+  return { clickMult, prodMult, globalMult, autobuyTiers, autoUpgrade, civAssemble, civAutoPolicy, civLegacy, civArchive, civProdBonus, civFestival };
 }
 
 // Returns { civProdMult: number[], civGlobalMult: number, extraMindBonus: number }

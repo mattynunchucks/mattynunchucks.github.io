@@ -6,7 +6,7 @@ import { calcStats, prestigeMultiplier, calcCivMindBonus, calcCivBonuses } from 
 import { maxConverters, converterCost, civMaxConverters, civConverterCost } from "./converters";
 
 export function applyTick(state, dt) {
-  const { prodMult, globalMult, autobuyTiers, autoUpgrade, civAssemble, civAutoPolicy, civArchive } = calcStats(
+  const { prodMult, globalMult, autobuyTiers, autoUpgrade, civAssemble, civAutoPolicy, civArchive, civProdBonus } = calcStats(
     state.purchasedUpgrades,
     state.universeOverclockCount || 0
   );
@@ -85,10 +85,12 @@ export function applyTick(state, dt) {
   );
   let cultureProduced = 0;
 
+  const surgeMult = Date.now() < (state.cultureSurgeEndsAt || 0) ? 10 : 1;
+
   if (state.civUnlocked) {
     for (let i = 0; i < CIV_TIERS.length; i++) {
       if (civConverters[i] > 0) {
-        const produced = civConverters[i] * CIV_BASE_RATE * Math.pow(1.5, i) * civProdMult[i] * civGlobalMult * dt;
+        const produced = civConverters[i] * CIV_BASE_RATE * Math.pow(1.5, i) * civProdMult[i] * civGlobalMult * civProdBonus * surgeMult * dt;
         civAmounts[i] += produced;
         if (i === 0) cultureProduced += produced;
       }

@@ -24,49 +24,49 @@ export const CIV_ERAS = [
     ]},
   { id: "era_agri",        at:      5000, emoji: "🌾", title: "Agricultural Revolution",   flavour: "Seeds planted in rows. The nomad becomes the farmer. Civilisation takes root.",     mindBonus: 0.08,
     choices: [
-      { id: "agri_a", name: "Crop Rotation",     desc: "Settlements produce ×2 Culture",   effect: { type: "civProd", tier: 1, mult: 2 } },
-      { id: "agri_b", name: "Land Survey",       desc: "All Culture rates ×1.5",           effect: { type: "civGlobal", mult: 1.5 } },
+      { id: "agri_a", name: "Crop Rotation",     desc: "Settlements ×2 output",            effect: { type: "civProd", tier: 1, mult: 2 } },
+      { id: "agri_b", name: "Land Survey",       desc: "All civ production ×1.5",          effect: { type: "civGlobal", mult: 1.5 } },
     ]},
   { id: "era_writing",     at:     40000, emoji: "📜", title: "Invention of Writing",      flavour: "Thought outlasts the thinker. Knowledge accumulates across generations.",           mindBonus: 0.10,
     choices: [
-      { id: "write_a", name: "Oral Tradition",   desc: "Villages produce ×2 Culture",      effect: { type: "civProd", tier: 2, mult: 2 } },
-      { id: "write_b", name: "Codex",            desc: "All Culture rates ×2",             effect: { type: "civGlobal", mult: 2 } },
+      { id: "write_a", name: "Oral Tradition",   desc: "Villages ×2 output",               effect: { type: "civProd", tier: 2, mult: 2 } },
+      { id: "write_b", name: "Codex",            desc: "All civ production ×2",            effect: { type: "civGlobal", mult: 2 } },
     ]},
   { id: "era_bronze",      at:    250000, emoji: "🛡", title: "Bronze Age",                flavour: "Metal shaped by fire becomes tool, weapon, and currency.",                         mindBonus: 0.12,
     choices: [
-      { id: "bronze_a", name: "Smelting Guild",  desc: "Towns produce ×2 Culture",         effect: { type: "civProd", tier: 3, mult: 2 } },
-      { id: "bronze_b", name: "Bronze Coinage",  desc: "All Culture rates ×2",             effect: { type: "civGlobal", mult: 2 } },
+      { id: "bronze_a", name: "Smelting Guild",  desc: "Towns ×2 output",                  effect: { type: "civProd", tier: 3, mult: 2 } },
+      { id: "bronze_b", name: "Bronze Coinage",  desc: "All civ production ×2",            effect: { type: "civGlobal", mult: 2 } },
     ]},
   { id: "era_iron",        at:   1500000, emoji: "⚒", title: "Iron Age",                  flavour: "Cheaper, harder, everywhere. Iron democratises power.",                            mindBonus: 0.15,
     choices: [
-      { id: "iron_a", name: "Iron Ploughs",      desc: "Cities produce ×2 Culture",        effect: { type: "civProd", tier: 4, mult: 2 } },
+      { id: "iron_a", name: "Iron Ploughs",      desc: "Cities ×2 output",                 effect: { type: "civProd", tier: 4, mult: 2 } },
       { id: "iron_b", name: "Standing Army",     desc: "+20% Mind production permanently", effect: { type: "mindBonus", value: 0.20 } },
     ]},
   { id: "era_classical",   at:   8000000, emoji: "🏛", title: "Classical Antiquity",       flavour: "Philosophy, democracy, and the rule of law echo down through the centuries.",      mindBonus: 0.18,
     choices: [
-      { id: "class_a", name: "Democracy",        desc: "Kingdoms produce ×2 Culture",      effect: { type: "civProd", tier: 5, mult: 2 } },
-      { id: "class_b", name: "Natural Philosophy",desc: "All Culture rates ×3",            effect: { type: "civGlobal", mult: 3 } },
+      { id: "class_a", name: "Democracy",        desc: "Kingdoms ×2 output",               effect: { type: "civProd", tier: 5, mult: 2 } },
+      { id: "class_b", name: "Natural Philosophy",desc: "All civ production ×3",           effect: { type: "civGlobal", mult: 3 } },
     ]},
   { id: "era_medieval",    at:  40000000, emoji: "🏰", title: "Medieval Age",              flavour: "Faith and feudalism order a fragmented world. Cathedrals touch the sky.",          mindBonus: 0.20,
     choices: [
-      { id: "med_a",  name: "Guild System",      desc: "Empires produce ×2 Culture",       effect: { type: "civProd", tier: 6, mult: 2 } },
+      { id: "med_a",  name: "Guild System",      desc: "Empires ×2 output",                effect: { type: "civProd", tier: 6, mult: 2 } },
       { id: "med_b",  name: "Scholasticism",     desc: "+25% Mind production permanently", effect: { type: "mindBonus", value: 0.25 } },
     ]},
   { id: "era_renaissance", at: 200000000, emoji: "🎨", title: "The Renaissance",           flavour: "Art, science, and humanism converge. The ancient world is rediscovered.",          mindBonus: 0.25,
     choices: [
-      { id: "ren_a",  name: "Printing Press",    desc: "Nations produce ×3 Culture",       effect: { type: "civProd", tier: 7, mult: 3 } },
-      { id: "ren_b",  name: "Scientific Method", desc: "All Culture rates ×4",             effect: { type: "civGlobal", mult: 4 } },
+      { id: "ren_a",  name: "Printing Press",    desc: "Nations ×3 output",                effect: { type: "civProd", tier: 7, mult: 3 } },
+      { id: "ren_b",  name: "Scientific Method", desc: "All civ production ×4",            effect: { type: "civGlobal", mult: 4 } },
     ]},
 ];
 
 // ── Culture policies (spendable with current culture) ────────────────────────
 export const CIV_POLICIES = [
   { id: "pol_pottery",     name: "Pottery",          cost:       300, desc: "Tribes ×1.5 Culture rate",      effect: { type: "civProd", tier: 0, mult: 1.5 } },
-  { id: "pol_irrigation",  name: "Irrigation",       cost:      2000, desc: "Settlements ×1.5 Culture rate", effect: { type: "civProd", tier: 1, mult: 1.5 } },
-  { id: "pol_calendar",    name: "Calendar",         cost:     15000, desc: "All Culture rates ×1.5",        effect: { type: "civGlobal", mult: 1.5 } },
+  { id: "pol_irrigation",  name: "Irrigation",       cost:      2000, desc: "Settlements ×1.5 output",       effect: { type: "civProd", tier: 1, mult: 1.5 } },
+  { id: "pol_calendar",    name: "Calendar",         cost:     15000, desc: "All civ production ×1.5",       effect: { type: "civGlobal", mult: 1.5 } },
   { id: "pol_philosophy",  name: "Philosophy",       cost:    100000, desc: "+15% Mind production",          effect: { type: "mindBonus", value: 0.15 } },
-  { id: "pol_aqueducts",   name: "Aqueducts",        cost:    600000, desc: "Villages & Towns ×2 Culture",   effect: { type: "civProd", tier: 2, mult: 2 }, also: { type: "civProd", tier: 3, mult: 2 } },
-  { id: "pol_printing",    name: "Block Printing",   cost:   4000000, desc: "All Culture rates ×2",          effect: { type: "civGlobal", mult: 2 } },
+  { id: "pol_aqueducts",   name: "Aqueducts",        cost:    600000, desc: "Villages & Towns ×2 output",    effect: { type: "civProd", tier: 2, mult: 2 }, also: { type: "civProd", tier: 3, mult: 2 } },
+  { id: "pol_printing",    name: "Block Printing",   cost:   4000000, desc: "All civ production ×2",         effect: { type: "civGlobal", mult: 2 } },
   { id: "pol_astronomy",   name: "Astronomy",        cost:  25000000, desc: "+30% Mind production",          effect: { type: "mindBonus", value: 0.30 } },
-  { id: "pol_universities",name: "Universities",     cost: 150000000, desc: "All Culture rates ×3",          effect: { type: "civGlobal", mult: 3 } },
+  { id: "pol_universities",name: "Universities",     cost: 150000000, desc: "All civ production ×3",         effect: { type: "civGlobal", mult: 3 } },
 ];

@@ -61,6 +61,12 @@ export const UPGRADES = [
   // ── Auto-upgrade ─────────────────────────────────────────────────────────────
   { id: "auto_upgrade", name: "Quantum Autosynthesis", desc: "Automatically purchases all Quark-cost upgrades when affordable", cost: [0, 10], tier: -1, type: "autoupgrade", value: 1 },
 
+  // ── Culture production boosts ────────────────────────────────────────────
+  { id: "civprod2q",   name: "Cultural Awakening",    desc: "Culture production ×2",                              cost: [5000000000,   0], tier: -1, type: "civprod",    value: 2, requiresCiv: true },
+  { id: "civprod5q",   name: "Age of Enlightenment",  desc: "Culture production ×5",                              cost: [500000000000, 0], tier: -1, type: "civprod",    value: 5, requiresCiv: true },
+  { id: "civprod3e",   name: "Eternal Flame",          desc: "Culture production ×3 (permanent)",                  cost: [0,  20],         tier: -1, type: "civprod",    value: 3, requiresCiv: true },
+  { id: "civfestival", name: "Cultural Festival",      desc: "Unlock a 60s ×10 culture surge once per run",        cost: [0,  15],         tier: -1, type: "civfestival", value: 1, requiresCiv: true },
+
   // ── Civilisation upgrades ─────────────────────────────────────────────────
   { id: "civ_assemble", name: "Civilisation Assembler", desc: "Auto-buys all Civilisation tier converters when affordable",    cost: [0,  15], tier: -1, type: "civassemble", value: 1 },
   { id: "civ_autopol",  name: "Auto Policy",            desc: "Automatically enacts Policies when you have enough Culture",    cost: [0,  20], tier: -1, type: "civautopol",  value: 1 },

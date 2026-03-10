@@ -97,6 +97,9 @@ export default function UniverseGame() {
   );
   const civEchoStudyLevel  = state.civEchoStudyLevel || 0;
   const civEchoStudyBonus  = 1 + 0.05 * civEchoStudyLevel;
+  const civProdBonus       = stats.civProdBonus || 1;
+  const civFestival        = stats.civFestival  || false;
+  const surgeActive        = Date.now() < (state.cultureSurgeEndsAt || 0);
   const prestigePreview    = Math.floor(calcEchoesFromRun(state.totalQuarksEarned) * civEchoStudyBonus);
   const canPrestige        = prestigePreview > 0;
   const hasAffordableUpgrade = UPGRADES.some(up =>
@@ -244,6 +247,18 @@ export default function UniverseGame() {
         culture: s.culture - cost,
         civEchoStudyLevel: level + 1,
         log: [`📚 Ancestral Codex Lv.${level + 1} — Echo yield +${(level + 1) * 5}%`, ...s.log.slice(0, 49)],
+      };
+    });
+  }, []);
+
+  const activateCultureSurge = useCallback(() => {
+    setState(s => {
+      if (s.cultureSurgeUsed) return s;
+      return {
+        ...s,
+        cultureSurgeEndsAt: Date.now() + 60000,
+        cultureSurgeUsed:   true,
+        log: [`🎭 Cultural Festival — ×10 culture for 60 seconds!`, ...s.log.slice(0, 49)],
       };
     });
   }, []);
@@ -492,6 +507,8 @@ export default function UniverseGame() {
             chooseEra={chooseEra} handleBuyPolicy={handleBuyPolicy}
             doDarkAges={doDarkAges} buyCivStudy={buyCivStudy}
             civEchoStudyLevel={civEchoStudyLevel} civEchoStudyBonus={civEchoStudyBonus}
+            civProdBonus={civProdBonus} civFestival={civFestival}
+            surgeActive={surgeActive} activateCultureSurge={activateCultureSurge}
           />
         )}
         {tab === "settings" && (

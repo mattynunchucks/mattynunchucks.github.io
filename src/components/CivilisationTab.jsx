@@ -4,7 +4,7 @@ import { civConverterCost, civMaxConverters } from "../game/converters";
 import { calcCivMindBonus, calcCivBonuses } from "../game/stats";
 import { fmt } from "../utils/format";
 
-export default function CivilisationTab({ state, theme, buyCivConverter, dismissEra, chooseEra, handleBuyPolicy, doDarkAges, buyCivStudy, civEchoStudyLevel, civEchoStudyBonus }) {
+export default function CivilisationTab({ state, theme, buyCivConverter, dismissEra, chooseEra, handleBuyPolicy, doDarkAges, buyCivStudy, civEchoStudyLevel, civEchoStudyBonus, civProdBonus, civFestival, surgeActive, activateCultureSurge }) {
   const [showDarkAgesConfirm, setShowDarkAgesConfirm] = useState(false);
 
   const eraChoices       = state.eraChoices       || {};
@@ -16,8 +16,10 @@ export default function CivilisationTab({ state, theme, buyCivConverter, dismiss
   const { civProdMult, civGlobalMult, extraMindBonus } = calcCivBonuses(eraChoices, purchasedPolicies, darkAgesCount, civArchive);
   const civMindBonus = calcCivMindBonus(state.totalCultureEver || 0, eraChoices, purchasedPolicies, darkAgesCount, civArchive);
 
+  const _civProdBonus = civProdBonus || 1;
+  const _surgeMult    = surgeActive ? 10 : 1;
   const cultureRate = (state.civConverters[0] || 0) > 0
-    ? state.civConverters[0] * CIV_BASE_RATE * civProdMult[0] * civGlobalMult
+    ? state.civConverters[0] * CIV_BASE_RATE * civProdMult[0] * civGlobalMult * _civProdBonus * _surgeMult
     : 0;
 
   const nextEra = CIV_ERAS.find(e => !firedEras.includes(e.id));
@@ -106,9 +108,26 @@ export default function CivilisationTab({ state, theme, buyCivConverter, dismiss
             🌑 Dark Ages ×{darkAgesCount} — culture ×{Math.pow(1.5, darkAgesCount).toFixed(2)}
           </div>
         )}
-        {civGlobalMult > 1 && (
-          <div style={{ fontSize: "0.52rem", color: "#c4a35a88", marginBottom: "6px" }}>
-            Culture mult: ×{civGlobalMult.toFixed(2)}
+        {(civGlobalMult > 1 || _civProdBonus > 1 || surgeActive) && (
+          <div style={{ fontSize: "0.52rem", color: "#c4a35a88", marginBottom: "4px" }}>
+            Culture mult: ×{(civGlobalMult * _civProdBonus * _surgeMult).toFixed(2)}
+            {surgeActive && <span style={{ color: "#ff88cc", marginLeft: "6px" }}>🎭 FESTIVAL ACTIVE</span>}
+          </div>
+        )}
+        {civFestival && (
+          <div style={{ marginBottom: "6px" }}>
+            {!state.cultureSurgeUsed ? (
+              <button onClick={activateCultureSurge} style={{
+                background: "#1a0820", border: "1px solid #ff88cc88",
+                borderRadius: "5px", color: "#ff88cc", padding: "4px 12px",
+                cursor: "pointer", fontSize: "0.52rem", letterSpacing: "0.1em",
+                fontFamily: "'Courier New', monospace",
+              }}>🎭 CULTURAL FESTIVAL — ×10 culture for 60s</button>
+            ) : surgeActive ? (
+              <div style={{ fontSize: "0.52rem", color: "#ff88cc" }}>🎭 Festival in progress…</div>
+            ) : (
+              <div style={{ fontSize: "0.52rem", color: "#4a2838" }}>🎭 Festival used this run</div>
+            )}
           </div>
         )}
         {nextEra && (
@@ -173,7 +192,7 @@ export default function CivilisationTab({ state, theme, buyCivConverter, dismiss
                     <span style={{ fontSize: "0.58rem", color: "#b8900a" }}>
                       {fmt(ownAmount)} <span style={{ color: "#7a6020", fontSize: "0.5rem" }}>{producesName}</span>
                     </span>
-                    {rate > 0 && <span style={{ fontSize: "0.52rem", color: "#7a6020" }}>+{fmt(rate)}/s</span>}
+                    {rate > 0 && <span style={{ fontSize: "0.52rem", color: "#7a6020" }}>+{fmt(rate)} {producesName}/s</span>}
                   </div>
                 )}
                 {!eraLocked && (
