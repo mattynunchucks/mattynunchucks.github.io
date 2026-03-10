@@ -141,8 +141,12 @@ export default function SettingsTab({
         </div>
       </div>
 
-      <div style={{ fontSize: "0.5rem", color: theme.textFaint, letterSpacing: "0.12em", textAlign: "center", marginTop: "20px" }}>
+      <div style={{ fontSize: "0.5rem", color: theme.textFaint, letterSpacing: "0.12em", textAlign: "center", marginTop: "20px", lineHeight: 2 }}>
         AUTO-SAVES EVERY 5 SECONDS · OFFLINE PROGRESS UP TO 4 HOURS
+        <br />
+        <span style={{ color: theme.textFaint, opacity: 0.6 }}>
+          LAST BUILD — {new Date(__BUILD_DATE__).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}
+        </span>
       </div>
     </div>
   );
