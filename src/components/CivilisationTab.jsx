@@ -124,7 +124,9 @@ export default function CivilisationTab({ state, theme, buyCivConverter, dismiss
                 fontFamily: "'Courier New', monospace",
               }}>🎭 CULTURAL FESTIVAL — ×10 culture for 60s</button>
             ) : surgeActive ? (
-              <div style={{ fontSize: "0.52rem", color: "#ff88cc" }}>🎭 Festival in progress…</div>
+              <div style={{ fontSize: "0.52rem", color: "#ff88cc" }}>
+                🎭 Festival in progress — {Math.ceil(Math.max(0, (state.cultureSurgeEndsAt - Date.now()) / 1000))}s remaining
+              </div>
             ) : (
               <div style={{ fontSize: "0.52rem", color: "#4a2838" }}>🎭 Festival used this run</div>
             )}
