@@ -8,8 +8,6 @@ export default defineConfig({
     __BUILD_DATE__: JSON.stringify(new Date().toISOString()),
   },
   build: {
-    outDir: ".",
-    emptyOutDir: false,
-    assetsDir: "assets",
+    outDir: "dist",
   },
 });
