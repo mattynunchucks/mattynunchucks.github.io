@@ -16,11 +16,9 @@ export default function CivilisationTab({ state, theme, buyCivConverter, dismiss
   const { civProdMult, civGlobalMult, extraMindBonus } = calcCivBonuses(eraChoices, purchasedPolicies, darkAgesCount, civArchive);
   const civMindBonus = calcCivMindBonus(state.totalCultureEver || 0, eraChoices, purchasedPolicies, darkAgesCount, civArchive);
 
-  const cultureRate = CIV_TIERS.reduce((sum, _, i) =>
-    sum + (state.civConverters[i] > 0
-      ? state.civConverters[i] * CIV_BASE_RATE * Math.pow(1.5, i) * civProdMult[i] * civGlobalMult
-      : 0), 0
-  );
+  const cultureRate = (state.civConverters[0] || 0) > 0
+    ? state.civConverters[0] * CIV_BASE_RATE * civProdMult[0] * civGlobalMult
+    : 0;
 
   const nextEra = CIV_ERAS.find(e => !firedEras.includes(e.id));
   const allErasDone = firedEras.length === CIV_ERAS.length;
