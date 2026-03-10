@@ -95,7 +95,9 @@ export default function UniverseGame() {
   const rates  = ELEMENTS.map((_, i) =>
     state.converters[i] * BASE_RATE_FROM_STATS(stats, i, pMult)
   );
-  const prestigePreview    = calcEchoesFromRun(state.totalQuarksEarned);
+  const civEchoStudyLevel  = state.civEchoStudyLevel || 0;
+  const civEchoStudyBonus  = 1 + 0.05 * civEchoStudyLevel;
+  const prestigePreview    = Math.floor(calcEchoesFromRun(state.totalQuarksEarned) * civEchoStudyBonus);
   const canPrestige        = prestigePreview > 0;
   const hasAffordableUpgrade = UPGRADES.some(up =>
     !state.purchasedUpgrades.includes(up.id) &&
@@ -232,9 +234,24 @@ export default function UniverseGame() {
     });
   }, []);
 
+  const buyCivStudy = useCallback(() => {
+    setState(s => {
+      const level = s.civEchoStudyLevel || 0;
+      const cost  = Math.floor(10000 * Math.pow(4, level));
+      if ((s.culture || 0) < cost) return s;
+      return {
+        ...s,
+        culture: s.culture - cost,
+        civEchoStudyLevel: level + 1,
+        log: [`📚 Ancestral Codex Lv.${level + 1} — Echo yield +${(level + 1) * 5}%`, ...s.log.slice(0, 49)],
+      };
+    });
+  }, []);
+
   const doPrestige = useCallback(() => {
     setState(s => {
-      const gained       = calcEchoesFromRun(s.totalQuarksEarned);
+      const studyBonus = 1 + 0.05 * (s.civEchoStudyLevel || 0);
+      const gained     = Math.floor(calcEchoesFromRun(s.totalQuarksEarned) * studyBonus);
       const keptUpgrades = s.purchasedUpgrades.filter(id => {
         const up = UPGRADES.find(u => u.id === id);
         return up && up.cost[1] > 0;
@@ -254,6 +271,7 @@ export default function UniverseGame() {
         eraChoices:             s.eraChoices || {},
         purchasedPolicies:      s.purchasedPolicies || [],
         darkAgesCount:          s.darkAgesCount || 0,
+        civEchoStudyLevel:      s.civEchoStudyLevel || 0,
       };
     });
     setShowPrestigeConfirm(false);
@@ -401,20 +419,17 @@ export default function UniverseGame() {
 
             {/* Civilisation column */}
             {state.civUnlocked && (
-              <div style={{ display: "flex", flexDirection: "column" }}>
-                <button onClick={() => setTab("civ")} style={{
-                  textAlign: "center", whiteSpace: "nowrap",
-                  background: tab === "civ" ? "#1a1208" : "#100e06",
-                  border: "1px solid " + (tab === "civ" ? "#c4a35a" : "#2a2010"),
-                  borderBottom: tab === "civ" ? "2px solid #c4a35a" : "1px solid #2a2010",
-                  color: tab === "civ" ? "#c4a35a" : "#5a4a20",
-                  borderRadius: "6px 6px 0 0", padding: "10px 16px", cursor: "pointer",
-                  fontSize: "0.72rem", letterSpacing: "0.16em",
-                  fontWeight: tab === "civ" ? "bold" : "normal",
-                  transition: "all 0.15s", fontFamily: "'Courier New', monospace",
-                }}>🏕 CIVILISATION</button>
-                <div style={{ height: "28px", background: "#0a0a08", border: "1px solid #1a1a10", borderTop: "none", borderRadius: "0 0 6px 6px" }} />
-              </div>
+              <button onClick={() => setTab("civ")} style={{
+                textAlign: "center", whiteSpace: "nowrap", alignSelf: "stretch",
+                background: tab === "civ" ? "#1a1208" : "#100e06",
+                border: "1px solid " + (tab === "civ" ? "#c4a35a" : "#2a2010"),
+                borderBottom: tab === "civ" ? "2px solid #c4a35a" : "1px solid #2a2010",
+                color: tab === "civ" ? "#c4a35a" : "#5a4a20",
+                borderRadius: "6px 6px 0 0", padding: "10px 16px", cursor: "pointer",
+                fontSize: "0.72rem", letterSpacing: "0.16em",
+                fontWeight: tab === "civ" ? "bold" : "normal",
+                transition: "all 0.15s", fontFamily: "'Courier New', monospace",
+              }}>🏕 CIVILISATION</button>
             )}
             {!state.civUnlocked && state.totalMindsEver >= CIV_UNLOCK_MINDS * 0.5 && (
               <button onClick={unlockCiv} disabled={state.totalMindsEver < CIV_UNLOCK_MINDS} style={{
@@ -475,7 +490,8 @@ export default function UniverseGame() {
             state={state} theme={theme}
             buyCivConverter={buyCivConverter} dismissEra={dismissEra}
             chooseEra={chooseEra} handleBuyPolicy={handleBuyPolicy}
-            doDarkAges={doDarkAges}
+            doDarkAges={doDarkAges} buyCivStudy={buyCivStudy}
+            civEchoStudyLevel={civEchoStudyLevel} civEchoStudyBonus={civEchoStudyBonus}
           />
         )}
         {tab === "settings" && (

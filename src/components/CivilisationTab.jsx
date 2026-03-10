@@ -4,7 +4,7 @@ import { civConverterCost, civMaxConverters } from "../game/converters";
 import { calcCivMindBonus, calcCivBonuses } from "../game/stats";
 import { fmt } from "../utils/format";
 
-export default function CivilisationTab({ state, theme, buyCivConverter, dismissEra, chooseEra, handleBuyPolicy, doDarkAges }) {
+export default function CivilisationTab({ state, theme, buyCivConverter, dismissEra, chooseEra, handleBuyPolicy, doDarkAges, buyCivStudy, civEchoStudyLevel, civEchoStudyBonus }) {
   const [showDarkAgesConfirm, setShowDarkAgesConfirm] = useState(false);
 
   const eraChoices       = state.eraChoices       || {};
@@ -208,36 +208,74 @@ export default function CivilisationTab({ state, theme, buyCivConverter, dismiss
       {/* Policies */}
       {(state.civConverters[0] > 0) && (
         <div style={{ marginBottom: "16px" }}>
-          <div style={{ fontSize: "0.52rem", color: "#c4a35a", letterSpacing: "0.16em", marginBottom: "8px" }}>📜 POLICIES</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+          <div style={{ fontSize: "0.5rem", color: "#c4a35a", letterSpacing: "0.18em", marginBottom: "8px", paddingBottom: "5px", borderBottom: "1px solid #c4a35a22" }}>
+            📜 CULTURE POLICIES
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+            {/* Ancestral Codex — repeating echo yield upgrade */}
+            {(() => {
+              const level      = civEchoStudyLevel || 0;
+              const cost       = Math.floor(10000 * Math.pow(4, level));
+              const canAfford  = (state.culture || 0) >= cost;
+              const bonusPct   = Math.round((civEchoStudyBonus || 1) * 100) - 100;
+              return (
+                <div style={{
+                  display: "grid", gridTemplateColumns: "1fr auto", alignItems: "center",
+                  background: canAfford ? "#0d0a14" : "#09080e",
+                  border: `1px solid ${canAfford ? "#aa88ff66" : "#2a2040"}`,
+                  borderRadius: "6px", padding: "8px 12px", gap: "10px",
+                }}>
+                  <div>
+                    <div style={{ fontSize: "0.67rem", fontWeight: "bold", color: "#aa88ff" }}>
+                      📚 Ancestral Codex {level > 0 && <span style={{ color: "#8866cc", fontSize: "0.58rem" }}>Lv.{level}</span>}
+                    </div>
+                    <div style={{ fontSize: "0.58rem", color: "#7a60aa", marginTop: "2px" }}>
+                      Recorded history carries forward — Echo yield on Prestige {bonusPct > 0 ? `+${bonusPct}%` : "unmodified"}
+                    </div>
+                    <div style={{ fontSize: "0.54rem", color: "#3a2a50", marginTop: "3px" }}>
+                      Cost: <span style={{ color: "#aa88ff88" }}>{fmt(cost)} Culture 🎭</span>
+                      <span style={{ color: "#5a4a80", marginLeft: "8px" }}>→ +{(level + 1) * 5}% total after</span>
+                    </div>
+                  </div>
+                  <button onClick={buyCivStudy} disabled={!canAfford} style={{
+                    background: canAfford ? "#aa88ff22" : "transparent",
+                    border: `1px solid ${canAfford ? "#aa88ff" : "#2a2040"}`,
+                    borderRadius: "5px", color: canAfford ? "#aa88ff" : "#3a2a50",
+                    padding: "6px 12px", cursor: canAfford ? "pointer" : "not-allowed",
+                    fontSize: "0.58rem", letterSpacing: "0.1em", whiteSpace: "nowrap",
+                    fontFamily: "'Courier New', monospace",
+                  }}>STUDY</button>
+                </div>
+              );
+            })()}
             {CIV_POLICIES.map(pol => {
               const owned     = purchasedPolicies.includes(pol.id);
               const canAfford = !owned && (state.culture || 0) >= pol.cost;
               return (
                 <div key={pol.id} style={{
-                  display: "grid", gridTemplateColumns: "1fr auto",
-                  alignItems: "center", gap: "10px",
-                  background: owned ? "#0a0e06" : (canAfford ? "#120f06" : "#0a0a08"),
-                  border: `1px solid ${owned ? "#3a5030" : (canAfford ? "#c4a35a55" : "#1a1a10")}`,
-                  borderRadius: "6px", padding: "8px 12px",
-                  opacity: owned ? 0.7 : 1,
+                  display: "grid", gridTemplateColumns: "1fr auto", alignItems: "center",
+                  background: owned ? "#0a0c08" : (canAfford ? "#120f06" : "#0a0905"),
+                  border: `1px solid ${owned ? "#2a3020" : (canAfford ? "#c4a35a66" : "#2a2010")}`,
+                  borderRadius: "6px", padding: "8px 12px", gap: "10px",
+                  opacity: owned ? 0.45 : 1,
                 }}>
                   <div>
-                    <div style={{ display: "flex", gap: "8px", alignItems: "baseline" }}>
-                      <span style={{ fontSize: "0.6rem", color: owned ? "#6bcb77" : "#c4a35a", fontWeight: "bold" }}>{pol.name}</span>
-                      <span style={{ fontSize: "0.5rem", color: "#7a6828" }}>{pol.desc}</span>
+                    <div style={{ fontSize: "0.67rem", fontWeight: "bold", color: owned ? "#554433" : "#c4a35a" }}>
+                      {pol.name} {owned && "✓"}
                     </div>
-                    <div style={{ fontSize: "0.48rem", color: "#5a4818", marginTop: "2px" }}>
-                      {owned ? "✓ Enacted" : `Cost: ${fmt(pol.cost)} Culture`}
+                    <div style={{ fontSize: "0.58rem", color: owned ? "#554433" : "#9a8850", marginTop: "2px" }}>{pol.desc}</div>
+                    <div style={{ fontSize: "0.54rem", color: "#5a4818", marginTop: "3px" }}>
+                      Cost: <span style={{ color: "#c4a35a88" }}>{fmt(pol.cost)} Culture 🎭</span>
                     </div>
                   </div>
                   {!owned && (
                     <button onClick={() => handleBuyPolicy(pol)} disabled={!canAfford} style={{
                       background: canAfford ? "#c4a35a22" : "transparent",
-                      border: `1px solid ${canAfford ? "#c4a35a" : "#3a2a10"}`,
-                      borderRadius: "5px", color: canAfford ? "#c4a35a" : "#4a3a18",
-                      padding: "4px 10px", cursor: canAfford ? "pointer" : "not-allowed",
-                      fontSize: "0.52rem", fontFamily: "'Courier New', monospace",
+                      border: `1px solid ${canAfford ? "#c4a35a" : "#2a2010"}`,
+                      borderRadius: "5px", color: canAfford ? "#c4a35a" : "#3a2a10",
+                      padding: "6px 12px", cursor: canAfford ? "pointer" : "not-allowed",
+                      fontSize: "0.58rem", letterSpacing: "0.1em", whiteSpace: "nowrap",
+                      fontFamily: "'Courier New', monospace",
                     }}>ENACT</button>
                   )}
                 </div>

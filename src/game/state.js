@@ -29,5 +29,6 @@ export function buildInitState() {
     purchasedPolicies:      [],
     darkAgesCount:          0,
     pendingEraChoice:       null,
+    civEchoStudyLevel:      0,
   };
 }
