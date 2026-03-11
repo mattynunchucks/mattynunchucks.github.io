@@ -49,9 +49,10 @@ export function calcStats(purchasedUpgrades, universeOverclockCount) {
 
 // Returns { civProdMult: number[], civGlobalMult: number, extraMindBonus: number }
 // from era choices + purchased policies + dark ages multiplier
-export function calcCivBonuses(eraChoices, purchasedPolicies, darkAgesCount, civArchive) {
+export function calcCivBonuses(eraChoices, purchasedPolicies, darkAgesCount, civArchive, darkWisdom = false) {
   const civProdMult  = CIV_TIERS.map(() => 1);
-  let civGlobalMult  = Math.pow(1.5, darkAgesCount || 0);
+  const darkBase     = darkWisdom ? 1.1 : 1.05;
+  let civGlobalMult  = Math.pow(darkBase, darkAgesCount || 0);
   let extraMindBonus = 0;
 
   function applyEffect(effect, doubled) {

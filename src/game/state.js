@@ -32,5 +32,8 @@ export function buildInitState() {
     civEchoStudyLevel:      0,
     cultureSurgeEndsAt:     0,
     cultureSurgeLastUsedAt: 0,
+    relics:                 0,
+    totalRelicsEarned:      0,
+    purchasedRelicUpgrades: [],
   };
 }

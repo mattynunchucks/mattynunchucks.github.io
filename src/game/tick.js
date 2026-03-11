@@ -80,8 +80,12 @@ export function applyTick(state, dt) {
   // ── Civilisation tick ──────────────────────────────────────────────────────
   const civAmounts    = [...(state.civAmounts    || CIV_TIERS.map(() => 0))];
   const civConverters = [...(state.civConverters || CIV_TIERS.map(() => 0))];
+  const purchasedRelicUpgrades = state.purchasedRelicUpgrades || [];
+  const hasDarkWisdom     = purchasedRelicUpgrades.includes("dark_wisdom");
+  const hasRelicResonance = purchasedRelicUpgrades.includes("relic_resonance");
+  const relicCultureMult  = hasRelicResonance ? (1 + 0.02 * (state.relics || 0)) : 1;
   const { civProdMult, civGlobalMult } = calcCivBonuses(
-    state.eraChoices || {}, state.purchasedPolicies || [], state.darkAgesCount || 0, civArchive
+    state.eraChoices || {}, state.purchasedPolicies || [], state.darkAgesCount || 0, civArchive, hasDarkWisdom
   );
   let cultureProduced = 0;
 
@@ -90,7 +94,7 @@ export function applyTick(state, dt) {
   if (state.civUnlocked) {
     for (let i = 0; i < CIV_TIERS.length; i++) {
       if (civConverters[i] > 0) {
-        const produced = civConverters[i] * CIV_BASE_RATE * Math.pow(1.5, i) * civProdMult[i] * civGlobalMult * civProdBonus * surgeMult * dt;
+        const produced = civConverters[i] * CIV_BASE_RATE * Math.pow(1.5, i) * civProdMult[i] * civGlobalMult * civProdBonus * relicCultureMult * surgeMult * dt;
         civAmounts[i] += produced;
         if (i === 0) cultureProduced += produced;
       }

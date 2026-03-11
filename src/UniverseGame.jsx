@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { ELEMENTS, MAX_OFFLINE_SECS } from "./data/elements";
 import { UPGRADES } from "./data/upgrades";
 import { CIV_TIERS, CIV_UNLOCK_MINDS } from "./data/civilisation";
+import { RELIC_UPGRADES } from "./data/relicUpgrades";
 
 import { fmt, fmtTime } from "./utils/format";
 import { saveGame, loadGame, exportSaveFile, parseSaveFile } from "./utils/save";
@@ -99,7 +100,11 @@ export default function UniverseGame() {
   const civEchoStudyBonus  = 1 + 0.05 * civEchoStudyLevel;
   const civProdBonus       = stats.civProdBonus || 1;
   const civFestival        = stats.civFestival  || false;
-  const surgeActive        = Date.now() < (state.cultureSurgeEndsAt || 0);
+  const surgeActive             = Date.now() < (state.cultureSurgeEndsAt || 0);
+  const purchasedRelicUpgrades  = state.purchasedRelicUpgrades || [];
+  const hasDarkWisdom           = purchasedRelicUpgrades.includes("dark_wisdom");
+  const hasRelicResonance       = purchasedRelicUpgrades.includes("relic_resonance");
+  const relicCultureMult        = hasRelicResonance ? (1 + 0.02 * (state.relics || 0)) : 1;
   const prestigePreview    = Math.floor(calcEchoesFromRun(state.totalQuarksEarned) * civEchoStudyBonus);
   const canPrestige        = prestigePreview > 0;
   const hasAffordableUpgrade = UPGRADES.some(up =>
@@ -142,21 +147,32 @@ export default function UniverseGame() {
 
   const doDarkAges = useCallback(() => {
     setState(s => {
-      const count      = (s.darkAgesCount || 0) + 1;
-      const hasLegacy  = (s.purchasedUpgrades || []).includes("civ_legacy");
+      const relicUpgrades    = s.purchasedRelicUpgrades || [];
+      const count            = (s.darkAgesCount || 0) + 1;
+      const hasLegacy        = (s.purchasedUpgrades || []).includes("civ_legacy");
+      const hasMemory        = relicUpgrades.includes("ancestral_memory");
+      const hasCascade       = relicUpgrades.includes("relic_cascade");
+      const hasFoundations   = relicUpgrades.includes("ancient_foundations");
+      const hasDarkWisdom    = relicUpgrades.includes("dark_wisdom");
+      const keepPolicies     = hasLegacy || hasMemory;
+      const relicGain        = 1 + (hasCascade ? Math.floor((s.darkAgesCount || 0) / 5) : 0);
+      const darkBase         = hasDarkWisdom ? 1.1 : 1.05;
+      const startTribes      = hasFoundations ? 100 : 0;
       return {
         ...s,
         civAmounts:        s.civAmounts.map(() => 0),
-        civConverters:     s.civConverters.map(() => 0),
+        civConverters:     s.civConverters.map((_, i) => i === 0 ? startTribes : 0),
         culture:           0,
         totalCultureEver:  0,
         firedEras:         [],
         eraChoices:        {},
-        purchasedPolicies: hasLegacy ? (s.purchasedPolicies || []) : [],
+        purchasedPolicies: keepPolicies ? (s.purchasedPolicies || []) : [],
         pendingEra:        null,
         pendingEraChoice:  null,
         darkAgesCount:     count,
-        log: [`🌑 Dark Ages #${count} — civilisation resets, ×${Math.pow(1.5, count).toFixed(1)} culture bonus${hasLegacy ? " (policies kept)" : ""}`, ...s.log.slice(0, 49)],
+        relics:            (s.relics || 0) + relicGain,
+        totalRelicsEarned: (s.totalRelicsEarned || 0) + relicGain,
+        log: [`🌑 Dark Ages #${count} — +${relicGain} Relic${relicGain > 1 ? "s" : ""}, ×${Math.pow(darkBase, count).toFixed(2)} culture bonus${keepPolicies ? " (policies kept)" : ""}`, ...s.log.slice(0, 49)],
       };
     });
   }, []);
@@ -266,6 +282,21 @@ export default function UniverseGame() {
     });
   }, []);
 
+  const buyRelicUpgrade = useCallback((upId) => {
+    setState(s => {
+      const up = RELIC_UPGRADES.find(u => u.id === upId);
+      if (!up) return s;
+      if ((s.purchasedRelicUpgrades || []).includes(upId)) return s;
+      if ((s.relics || 0) < up.cost) return s;
+      return {
+        ...s,
+        relics:                 (s.relics || 0) - up.cost,
+        purchasedRelicUpgrades: [...(s.purchasedRelicUpgrades || []), upId],
+        log: [`🏺 ${up.name} — ${up.desc}`, ...s.log.slice(0, 49)],
+      };
+    });
+  }, []);
+
   const doPrestige = useCallback(() => {
     setState(s => {
       const studyBonus = 1 + 0.05 * (s.civEchoStudyLevel || 0);
@@ -291,6 +322,9 @@ export default function UniverseGame() {
         darkAgesCount:          s.darkAgesCount || 0,
         civEchoStudyLevel:      s.civEchoStudyLevel || 0,
         cultureSurgeLastUsedAt: s.cultureSurgeLastUsedAt || 0,
+        relics:                 s.relics || 0,
+        totalRelicsEarned:      s.totalRelicsEarned || 0,
+        purchasedRelicUpgrades: s.purchasedRelicUpgrades || [],
       };
     });
     setShowPrestigeConfirm(false);
@@ -526,6 +560,8 @@ export default function UniverseGame() {
             civEchoStudyLevel={civEchoStudyLevel} civEchoStudyBonus={civEchoStudyBonus}
             civProdBonus={civProdBonus} civFestival={civFestival}
             surgeActive={surgeActive} activateCultureSurge={activateCultureSurge}
+            relicCultureMult={relicCultureMult} hasDarkWisdom={hasDarkWisdom}
+            buyRelicUpgrade={buyRelicUpgrade}
             view={tab === "civpolicies" ? "civpolicies" : "civ"}
           />
         )}

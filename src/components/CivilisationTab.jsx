@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { CIV_TIERS, CIV_ERAS, CIV_POLICIES, CIV_BASE_RATE } from "../data/civilisation";
+import { RELIC_UPGRADES } from "../data/relicUpgrades";
 import { civConverterCost, civMaxConverters } from "../game/converters";
 import { calcCivMindBonus, calcCivBonuses } from "../game/stats";
 import { fmt } from "../utils/format";
 
-export default function CivilisationTab({ state, theme, buyCivConverter, dismissEra, chooseEra, handleBuyPolicy, doDarkAges, buyCivStudy, civEchoStudyLevel, civEchoStudyBonus, civProdBonus, civFestival, surgeActive, activateCultureSurge, view = "civ" }) {
+export default function CivilisationTab({ state, theme, buyCivConverter, dismissEra, chooseEra, handleBuyPolicy, doDarkAges, buyCivStudy, civEchoStudyLevel, civEchoStudyBonus, civProdBonus, civFestival, surgeActive, activateCultureSurge, relicCultureMult, hasDarkWisdom, buyRelicUpgrade, view = "civ" }) {
   const [showDarkAgesConfirm, setShowDarkAgesConfirm] = useState(false);
 
   const eraChoices       = state.eraChoices       || {};
@@ -13,13 +14,15 @@ export default function CivilisationTab({ state, theme, buyCivConverter, dismiss
   const firedEras        = state.firedEras         || [];
 
   const civArchive   = (state.purchasedUpgrades || []).includes("civ_archive");
-  const { civProdMult, civGlobalMult, extraMindBonus } = calcCivBonuses(eraChoices, purchasedPolicies, darkAgesCount, civArchive);
+  const _hasDarkWisdom = hasDarkWisdom || false;
+  const { civProdMult, civGlobalMult, extraMindBonus } = calcCivBonuses(eraChoices, purchasedPolicies, darkAgesCount, civArchive, _hasDarkWisdom);
   const civMindBonus = calcCivMindBonus(state.totalCultureEver || 0, eraChoices, purchasedPolicies, darkAgesCount, civArchive);
 
-  const _civProdBonus = civProdBonus || 1;
-  const _surgeMult    = surgeActive ? 10 : 1;
+  const _civProdBonus    = civProdBonus || 1;
+  const _surgeMult       = surgeActive ? 10 : 1;
+  const _relicCultureMult = relicCultureMult || 1;
   const cultureRate = (state.civConverters[0] || 0) > 0
-    ? state.civConverters[0] * CIV_BASE_RATE * civProdMult[0] * civGlobalMult * _civProdBonus * _surgeMult
+    ? state.civConverters[0] * CIV_BASE_RATE * civProdMult[0] * civGlobalMult * _civProdBonus * _relicCultureMult * _surgeMult
     : 0;
 
   const nextEra = CIV_ERAS.find(e => !firedEras.includes(e.id));
@@ -29,6 +32,8 @@ export default function CivilisationTab({ state, theme, buyCivConverter, dismiss
   // ── Policies-only view ──────────────────────────────────────────────────────
   if (view === "civpolicies") {
     const policyVisible = state.civConverters[0] > 0;
+    const relics = state.relics || 0;
+    const purchasedRelicUpgrades = state.purchasedRelicUpgrades || [];
     return (
       <div>
         {!policyVisible && (
@@ -107,6 +112,51 @@ export default function CivilisationTab({ state, theme, buyCivConverter, dismiss
                 </div>
               );
             })}
+
+            {/* ── Relics section ── */}
+            <div style={{ marginTop: "10px", paddingTop: "10px", borderTop: "1px solid #2a1a08" }}>
+              <div style={{ fontSize: "0.52rem", color: "#cc9944", letterSpacing: "0.15em", marginBottom: "6px" }}>
+                🏺 RELICS — {relics} available &nbsp;·&nbsp; {state.totalRelicsEarned || 0} total earned
+              </div>
+              {darkAgesCount === 0 && (
+                <div style={{ fontSize: "0.52rem", color: "#3a2a10", fontStyle: "italic", marginBottom: "6px" }}>
+                  Trigger a Dark Age to earn your first Relic.
+                </div>
+              )}
+              {RELIC_UPGRADES.map(up => {
+                const owned     = purchasedRelicUpgrades.includes(up.id);
+                const canAfford = !owned && relics >= up.cost;
+                return (
+                  <div key={up.id} style={{
+                    display: "grid", gridTemplateColumns: "1fr auto", alignItems: "center",
+                    background: owned ? "#0a0a08" : (canAfford ? "#130e04" : "#0a0806"),
+                    border: `1px solid ${owned ? "#2a2010" : (canAfford ? "#cc994466" : "#1a1408")}`,
+                    borderRadius: "6px", padding: "8px 12px", gap: "10px",
+                    opacity: owned ? 0.45 : 1, marginBottom: "5px",
+                  }}>
+                    <div>
+                      <div style={{ fontSize: "0.67rem", fontWeight: "bold", color: owned ? "#554433" : "#cc9944" }}>
+                        {up.icon} {up.name} {owned && "✓"}
+                      </div>
+                      <div style={{ fontSize: "0.58rem", color: owned ? "#554433" : "#998844", marginTop: "2px" }}>{up.desc}</div>
+                      <div style={{ fontSize: "0.54rem", color: "#4a3010", marginTop: "3px" }}>
+                        Cost: <span style={{ color: "#cc994488" }}>{up.cost} Relic{up.cost !== 1 ? "s" : ""} 🏺</span>
+                      </div>
+                    </div>
+                    {!owned && (
+                      <button onClick={() => buyRelicUpgrade(up.id)} disabled={!canAfford} style={{
+                        background: canAfford ? "#cc994422" : "transparent",
+                        border: `1px solid ${canAfford ? "#cc9944" : "#2a1a08"}`,
+                        borderRadius: "5px", color: canAfford ? "#cc9944" : "#3a2010",
+                        padding: "6px 12px", cursor: canAfford ? "pointer" : "not-allowed",
+                        fontSize: "0.58rem", letterSpacing: "0.1em", whiteSpace: "nowrap",
+                        fontFamily: "'Courier New', monospace",
+                      }}>INSCRIBE</button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
       </div>
@@ -192,7 +242,7 @@ export default function CivilisationTab({ state, theme, buyCivConverter, dismiss
         )}
         {darkAgesCount > 0 && (
           <div style={{ fontSize: "0.52rem", color: "#aa88ff", marginBottom: "4px" }}>
-            🌑 Dark Ages ×{darkAgesCount} — culture ×{Math.pow(1.5, darkAgesCount).toFixed(2)}
+            🌑 Dark Ages ×{darkAgesCount} — culture ×{Math.pow(_hasDarkWisdom ? 1.1 : 1.05, darkAgesCount).toFixed(2)}
           </div>
         )}
         {(civGlobalMult > 1 || _civProdBonus > 1 || surgeActive) && (
@@ -330,13 +380,24 @@ export default function CivilisationTab({ state, theme, buyCivConverter, dismiss
             <div style={{ fontSize: "0.57rem", color: "#cc99ff", marginBottom: "4px" }}>Collapse and Rebirth</div>
             <div style={{ fontSize: "0.52rem", color: "#7a60aa", lineHeight: 1.6 }}>
               Reset your entire civilisation — all tiers, culture, eras, and policies lost.
-              In return, all future culture production is permanently ×{Math.pow(1.5, darkAgesCount + 1).toFixed(2)}.
+              In return, all future culture production is permanently ×{Math.pow(_hasDarkWisdom ? 1.1 : 1.05, darkAgesCount + 1).toFixed(2)}.
+              {(state.purchasedRelicUpgrades || []).length === 0 && <span style={{ color: "#5a4a80" }}> Earn Relics to unlock upgrades.</span>}
             </div>
             {darkAgesCount > 0 && (
               <div style={{ fontSize: "0.5rem", color: "#aa88ff", marginTop: "4px" }}>
-                Current bonus: ×{Math.pow(1.5, darkAgesCount).toFixed(2)} (after reset: ×{Math.pow(1.5, darkAgesCount + 1).toFixed(2)})
+                Current bonus: ×{Math.pow(_hasDarkWisdom ? 1.1 : 1.05, darkAgesCount).toFixed(2)} (after reset: ×{Math.pow(_hasDarkWisdom ? 1.1 : 1.05, darkAgesCount + 1).toFixed(2)})
               </div>
             )}
+            {(() => {
+              const hasCascade = (state.purchasedRelicUpgrades || []).includes("relic_cascade");
+              const relicGain  = 1 + (hasCascade ? Math.floor(darkAgesCount / 5) : 0);
+              return (
+                <div style={{ fontSize: "0.5rem", color: "#cc9944", marginTop: "4px" }}>
+                  🏺 +{relicGain} Relic{relicGain !== 1 ? "s" : ""} on reset
+                  {hasCascade && <span style={{ color: "#8a6622", marginLeft: "4px" }}>(Cascade: +{Math.floor(darkAgesCount / 5)} bonus)</span>}
+                </div>
+              );
+            })()}
           </div>
           {!showDarkAgesConfirm ? (
             <button onClick={() => setShowDarkAgesConfirm(true)} style={{
