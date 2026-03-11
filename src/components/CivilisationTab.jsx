@@ -4,7 +4,7 @@ import { civConverterCost, civMaxConverters } from "../game/converters";
 import { calcCivMindBonus, calcCivBonuses } from "../game/stats";
 import { fmt } from "../utils/format";
 
-export default function CivilisationTab({ state, theme, buyCivConverter, dismissEra, chooseEra, handleBuyPolicy, doDarkAges, buyCivStudy, civEchoStudyLevel, civEchoStudyBonus, civProdBonus, civFestival, surgeActive, activateCultureSurge }) {
+export default function CivilisationTab({ state, theme, buyCivConverter, dismissEra, chooseEra, handleBuyPolicy, doDarkAges, buyCivStudy, civEchoStudyLevel, civEchoStudyBonus, civProdBonus, civFestival, surgeActive, activateCultureSurge, view = "civ" }) {
   const [showDarkAgesConfirm, setShowDarkAgesConfirm] = useState(false);
 
   const eraChoices       = state.eraChoices       || {};
@@ -25,6 +25,93 @@ export default function CivilisationTab({ state, theme, buyCivConverter, dismiss
   const nextEra = CIV_ERAS.find(e => !firedEras.includes(e.id));
   const allErasDone = firedEras.length === CIV_ERAS.length;
   const canDarkAges = allErasDone;
+
+  // ── Policies-only view ──────────────────────────────────────────────────────
+  if (view === "civpolicies") {
+    const policyVisible = state.civConverters[0] > 0;
+    return (
+      <div>
+        {!policyVisible && (
+          <div style={{ fontSize: "0.58rem", color: "#5a4818", textAlign: "center", padding: "20px" }}>
+            Train Tribes to unlock Policies.
+          </div>
+        )}
+        {policyVisible && (
+          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+            {/* Ancestral Codex */}
+            {(() => {
+              const level     = civEchoStudyLevel || 0;
+              const cost      = Math.floor(10000 * Math.pow(4, level));
+              const canAfford = (state.culture || 0) >= cost;
+              const bonusPct  = Math.round((civEchoStudyBonus || 1) * 100) - 100;
+              return (
+                <div style={{
+                  display: "grid", gridTemplateColumns: "1fr auto", alignItems: "center",
+                  background: canAfford ? "#0d0a14" : "#09080e",
+                  border: `1px solid ${canAfford ? "#aa88ff66" : "#2a2040"}`,
+                  borderRadius: "6px", padding: "8px 12px", gap: "10px",
+                }}>
+                  <div>
+                    <div style={{ fontSize: "0.67rem", fontWeight: "bold", color: "#aa88ff" }}>
+                      📚 Ancestral Codex {level > 0 && <span style={{ color: "#8866cc", fontSize: "0.58rem" }}>Lv.{level}</span>}
+                    </div>
+                    <div style={{ fontSize: "0.58rem", color: "#7a60aa", marginTop: "2px" }}>
+                      Recorded history carries forward — Echo yield on Prestige {bonusPct > 0 ? `+${bonusPct}%` : "unmodified"}
+                    </div>
+                    <div style={{ fontSize: "0.54rem", color: "#3a2a50", marginTop: "3px" }}>
+                      Cost: <span style={{ color: "#aa88ff88" }}>{fmt(cost)} Culture 🎭</span>
+                      <span style={{ color: "#5a4a80", marginLeft: "8px" }}>→ +{(level + 1) * 5}% total after</span>
+                    </div>
+                  </div>
+                  <button onClick={buyCivStudy} disabled={!canAfford} style={{
+                    background: canAfford ? "#aa88ff22" : "transparent",
+                    border: `1px solid ${canAfford ? "#aa88ff" : "#2a2040"}`,
+                    borderRadius: "5px", color: canAfford ? "#aa88ff" : "#3a2a50",
+                    padding: "6px 12px", cursor: canAfford ? "pointer" : "not-allowed",
+                    fontSize: "0.58rem", letterSpacing: "0.1em", whiteSpace: "nowrap",
+                    fontFamily: "'Courier New', monospace",
+                  }}>STUDY</button>
+                </div>
+              );
+            })()}
+            {CIV_POLICIES.map(pol => {
+              const owned     = purchasedPolicies.includes(pol.id);
+              const canAfford = !owned && (state.culture || 0) >= pol.cost;
+              return (
+                <div key={pol.id} style={{
+                  display: "grid", gridTemplateColumns: "1fr auto", alignItems: "center",
+                  background: owned ? "#0a0c08" : (canAfford ? "#120f06" : "#0a0905"),
+                  border: `1px solid ${owned ? "#2a3020" : (canAfford ? "#c4a35a66" : "#2a2010")}`,
+                  borderRadius: "6px", padding: "8px 12px", gap: "10px",
+                  opacity: owned ? 0.45 : 1,
+                }}>
+                  <div>
+                    <div style={{ fontSize: "0.67rem", fontWeight: "bold", color: owned ? "#554433" : "#c4a35a" }}>
+                      {pol.name} {owned && "✓"}
+                    </div>
+                    <div style={{ fontSize: "0.58rem", color: owned ? "#554433" : "#9a8850", marginTop: "2px" }}>{pol.desc}</div>
+                    <div style={{ fontSize: "0.54rem", color: "#5a4818", marginTop: "3px" }}>
+                      Cost: <span style={{ color: "#c4a35a88" }}>{fmt(pol.cost)} Culture 🎭</span>
+                    </div>
+                  </div>
+                  {!owned && (
+                    <button onClick={() => handleBuyPolicy(pol)} disabled={!canAfford} style={{
+                      background: canAfford ? "#c4a35a22" : "transparent",
+                      border: `1px solid ${canAfford ? "#c4a35a" : "#2a2010"}`,
+                      borderRadius: "5px", color: canAfford ? "#c4a35a" : "#3a2a10",
+                      padding: "6px 12px", cursor: canAfford ? "pointer" : "not-allowed",
+                      fontSize: "0.58rem", letterSpacing: "0.1em", whiteSpace: "nowrap",
+                      fontFamily: "'Courier New', monospace",
+                    }}>ENACT</button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    );
+  }
 
   // ── Era choice modal ────────────────────────────────────────────────────────
   if (state.pendingEraChoice) {
@@ -114,24 +201,35 @@ export default function CivilisationTab({ state, theme, buyCivConverter, dismiss
             {surgeActive && <span style={{ color: "#ff88cc", marginLeft: "6px" }}>🎭 FESTIVAL ACTIVE</span>}
           </div>
         )}
-        {civFestival && (
-          <div style={{ marginBottom: "6px" }}>
-            {!state.cultureSurgeUsed ? (
-              <button onClick={activateCultureSurge} style={{
-                background: "#1a0820", border: "1px solid #ff88cc88",
-                borderRadius: "5px", color: "#ff88cc", padding: "4px 12px",
-                cursor: "pointer", fontSize: "0.52rem", letterSpacing: "0.1em",
-                fontFamily: "'Courier New', monospace",
-              }}>🎭 CULTURAL FESTIVAL — ×10 culture for 60s</button>
-            ) : surgeActive ? (
-              <div style={{ fontSize: "0.52rem", color: "#ff88cc" }}>
-                🎭 Festival in progress — {Math.ceil(Math.max(0, (state.cultureSurgeEndsAt - Date.now()) / 1000))}s remaining
-              </div>
-            ) : (
-              <div style={{ fontSize: "0.52rem", color: "#4a2838" }}>🎭 Festival used this run</div>
-            )}
-          </div>
-        )}
+        {civFestival && (() => {
+          const now = Date.now();
+          const cooldownMs = 24 * 60 * 60 * 1000;
+          const cooldownRemaining = Math.max(0, (state.cultureSurgeLastUsedAt || 0) + cooldownMs - now);
+          const festivalAvailable = !surgeActive && cooldownRemaining === 0;
+          const cooldownH = Math.floor(cooldownRemaining / 3600000);
+          const cooldownM = Math.floor((cooldownRemaining % 3600000) / 60000);
+          const cooldownS = Math.floor((cooldownRemaining % 60000) / 1000);
+          return (
+            <div style={{ marginBottom: "6px" }}>
+              {surgeActive ? (
+                <div style={{ fontSize: "0.52rem", color: "#ff88cc" }}>
+                  🎭 Festival in progress — {Math.ceil(Math.max(0, (state.cultureSurgeEndsAt - now) / 1000))}s remaining
+                </div>
+              ) : festivalAvailable ? (
+                <button onClick={activateCultureSurge} style={{
+                  background: "#1a0820", border: "1px solid #ff88cc88",
+                  borderRadius: "5px", color: "#ff88cc", padding: "4px 12px",
+                  cursor: "pointer", fontSize: "0.52rem", letterSpacing: "0.1em",
+                  fontFamily: "'Courier New', monospace",
+                }}>🎭 CULTURAL FESTIVAL — ×10 culture for 60s</button>
+              ) : (
+                <div style={{ fontSize: "0.52rem", color: "#4a2838" }}>
+                  🎭 Festival on cooldown — {cooldownH}h {cooldownM}m {cooldownS}s
+                </div>
+              )}
+            </div>
+          );
+        })()}
         {nextEra && (
           <>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
@@ -223,86 +321,6 @@ export default function CivilisationTab({ state, theme, buyCivConverter, dismiss
           );
         })}
       </div>
-
-      {/* Policies */}
-      {(state.civConverters[0] > 0) && (
-        <div style={{ marginBottom: "16px" }}>
-          <div style={{ fontSize: "0.5rem", color: "#c4a35a", letterSpacing: "0.18em", marginBottom: "8px", paddingBottom: "5px", borderBottom: "1px solid #c4a35a22" }}>
-            📜 CULTURE POLICIES
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-            {/* Ancestral Codex — repeating echo yield upgrade */}
-            {(() => {
-              const level      = civEchoStudyLevel || 0;
-              const cost       = Math.floor(10000 * Math.pow(4, level));
-              const canAfford  = (state.culture || 0) >= cost;
-              const bonusPct   = Math.round((civEchoStudyBonus || 1) * 100) - 100;
-              return (
-                <div style={{
-                  display: "grid", gridTemplateColumns: "1fr auto", alignItems: "center",
-                  background: canAfford ? "#0d0a14" : "#09080e",
-                  border: `1px solid ${canAfford ? "#aa88ff66" : "#2a2040"}`,
-                  borderRadius: "6px", padding: "8px 12px", gap: "10px",
-                }}>
-                  <div>
-                    <div style={{ fontSize: "0.67rem", fontWeight: "bold", color: "#aa88ff" }}>
-                      📚 Ancestral Codex {level > 0 && <span style={{ color: "#8866cc", fontSize: "0.58rem" }}>Lv.{level}</span>}
-                    </div>
-                    <div style={{ fontSize: "0.58rem", color: "#7a60aa", marginTop: "2px" }}>
-                      Recorded history carries forward — Echo yield on Prestige {bonusPct > 0 ? `+${bonusPct}%` : "unmodified"}
-                    </div>
-                    <div style={{ fontSize: "0.54rem", color: "#3a2a50", marginTop: "3px" }}>
-                      Cost: <span style={{ color: "#aa88ff88" }}>{fmt(cost)} Culture 🎭</span>
-                      <span style={{ color: "#5a4a80", marginLeft: "8px" }}>→ +{(level + 1) * 5}% total after</span>
-                    </div>
-                  </div>
-                  <button onClick={buyCivStudy} disabled={!canAfford} style={{
-                    background: canAfford ? "#aa88ff22" : "transparent",
-                    border: `1px solid ${canAfford ? "#aa88ff" : "#2a2040"}`,
-                    borderRadius: "5px", color: canAfford ? "#aa88ff" : "#3a2a50",
-                    padding: "6px 12px", cursor: canAfford ? "pointer" : "not-allowed",
-                    fontSize: "0.58rem", letterSpacing: "0.1em", whiteSpace: "nowrap",
-                    fontFamily: "'Courier New', monospace",
-                  }}>STUDY</button>
-                </div>
-              );
-            })()}
-            {CIV_POLICIES.map(pol => {
-              const owned     = purchasedPolicies.includes(pol.id);
-              const canAfford = !owned && (state.culture || 0) >= pol.cost;
-              return (
-                <div key={pol.id} style={{
-                  display: "grid", gridTemplateColumns: "1fr auto", alignItems: "center",
-                  background: owned ? "#0a0c08" : (canAfford ? "#120f06" : "#0a0905"),
-                  border: `1px solid ${owned ? "#2a3020" : (canAfford ? "#c4a35a66" : "#2a2010")}`,
-                  borderRadius: "6px", padding: "8px 12px", gap: "10px",
-                  opacity: owned ? 0.45 : 1,
-                }}>
-                  <div>
-                    <div style={{ fontSize: "0.67rem", fontWeight: "bold", color: owned ? "#554433" : "#c4a35a" }}>
-                      {pol.name} {owned && "✓"}
-                    </div>
-                    <div style={{ fontSize: "0.58rem", color: owned ? "#554433" : "#9a8850", marginTop: "2px" }}>{pol.desc}</div>
-                    <div style={{ fontSize: "0.54rem", color: "#5a4818", marginTop: "3px" }}>
-                      Cost: <span style={{ color: "#c4a35a88" }}>{fmt(pol.cost)} Culture 🎭</span>
-                    </div>
-                  </div>
-                  {!owned && (
-                    <button onClick={() => handleBuyPolicy(pol)} disabled={!canAfford} style={{
-                      background: canAfford ? "#c4a35a22" : "transparent",
-                      border: `1px solid ${canAfford ? "#c4a35a" : "#2a2010"}`,
-                      borderRadius: "5px", color: canAfford ? "#c4a35a" : "#3a2a10",
-                      padding: "6px 12px", cursor: canAfford ? "pointer" : "not-allowed",
-                      fontSize: "0.58rem", letterSpacing: "0.1em", whiteSpace: "nowrap",
-                      fontFamily: "'Courier New', monospace",
-                    }}>ENACT</button>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
 
       {/* Dark Ages */}
       {canDarkAges && (

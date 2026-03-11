@@ -253,11 +253,14 @@ export default function UniverseGame() {
 
   const activateCultureSurge = useCallback(() => {
     setState(s => {
-      if (s.cultureSurgeUsed) return s;
+      const now = Date.now();
+      const cooldownMs = 24 * 60 * 60 * 1000;
+      if (now < (s.cultureSurgeEndsAt || 0)) return s;
+      if (now - (s.cultureSurgeLastUsedAt || 0) < cooldownMs) return s;
       return {
         ...s,
-        cultureSurgeEndsAt: Date.now() + 60000,
-        cultureSurgeUsed:   true,
+        cultureSurgeEndsAt:     now + 60000,
+        cultureSurgeLastUsedAt: now,
         log: [`🎭 Cultural Festival — ×10 culture for 60 seconds!`, ...s.log.slice(0, 49)],
       };
     });
@@ -287,6 +290,7 @@ export default function UniverseGame() {
         purchasedPolicies:      s.purchasedPolicies || [],
         darkAgesCount:          s.darkAgesCount || 0,
         civEchoStudyLevel:      s.civEchoStudyLevel || 0,
+        cultureSurgeLastUsedAt: s.cultureSurgeLastUsedAt || 0,
       };
     });
     setShowPrestigeConfirm(false);
@@ -434,17 +438,30 @@ export default function UniverseGame() {
 
             {/* Civilisation column */}
             {state.civUnlocked && (
-              <button onClick={() => setTab("civ")} style={{
-                textAlign: "center", whiteSpace: "nowrap", alignSelf: "stretch",
-                background: tab === "civ" ? "#1a1208" : "#100e06",
-                border: "1px solid " + (tab === "civ" ? "#c4a35a" : "#2a2010"),
-                borderBottom: tab === "civ" ? "2px solid #c4a35a" : "1px solid #2a2010",
-                color: tab === "civ" ? "#c4a35a" : "#5a4a20",
-                borderRadius: "6px 6px 0 0", padding: "10px 16px", cursor: "pointer",
-                fontSize: "0.72rem", letterSpacing: "0.16em",
-                fontWeight: tab === "civ" ? "bold" : "normal",
-                transition: "all 0.15s", fontFamily: "'Courier New', monospace",
-              }}>🏕 CIVILISATION</button>
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                <button onClick={() => setTab("civ")} style={{
+                  textAlign: "center", whiteSpace: "nowrap",
+                  background: (tab === "civ" || tab === "civpolicies") ? "#1a1208" : "#100e06",
+                  border: "1px solid " + ((tab === "civ" || tab === "civpolicies") ? "#c4a35a" : "#2a2010"),
+                  borderBottom: (tab === "civ" || tab === "civpolicies") ? "2px solid #c4a35a" : "1px solid #2a2010",
+                  color: (tab === "civ" || tab === "civpolicies") ? "#c4a35a" : "#5a4a20",
+                  borderRadius: "6px 6px 0 0", padding: "10px 16px", cursor: "pointer",
+                  fontSize: "0.72rem", letterSpacing: "0.16em",
+                  fontWeight: (tab === "civ" || tab === "civpolicies") ? "bold" : "normal",
+                  transition: "all 0.15s", fontFamily: "'Courier New', monospace",
+                }}>🏕 CIVILISATION</button>
+                <button onClick={() => setTab("civpolicies")} style={{
+                  textAlign: "center", whiteSpace: "nowrap",
+                  background: tab === "civpolicies" ? "#1a1208" : "#0e0b04",
+                  border: "1px solid " + (tab === "civpolicies" ? "#c4a35a" : "#3a2a10"),
+                  borderTop: "1px solid #2a2010",
+                  color: tab === "civpolicies" ? "#c4a35a" : "#7a5a20",
+                  borderRadius: "0 0 6px 6px", padding: "4px 16px", cursor: "pointer",
+                  fontSize: "0.52rem", letterSpacing: "0.14em",
+                  fontWeight: tab === "civpolicies" ? "bold" : "normal",
+                  transition: "all 0.15s", fontFamily: "'Courier New', monospace",
+                }}>POLICIES</button>
+              </div>
             )}
             {!state.civUnlocked && state.totalMindsEver >= CIV_UNLOCK_MINDS * 0.5 && (
               <button onClick={unlockCiv} disabled={state.totalMindsEver < CIV_UNLOCK_MINDS} style={{
@@ -500,7 +517,7 @@ export default function UniverseGame() {
             showPrestigeConfirm={showPrestigeConfirm} setShowPrestigeConfirm={setShowPrestigeConfirm}
           />
         )}
-        {tab === "civ" && (
+        {(tab === "civ" || tab === "civpolicies") && (
           <CivilisationTab
             state={state} theme={theme}
             buyCivConverter={buyCivConverter} dismissEra={dismissEra}
@@ -509,6 +526,7 @@ export default function UniverseGame() {
             civEchoStudyLevel={civEchoStudyLevel} civEchoStudyBonus={civEchoStudyBonus}
             civProdBonus={civProdBonus} civFestival={civFestival}
             surgeActive={surgeActive} activateCultureSurge={activateCultureSurge}
+            view={tab === "civpolicies" ? "civpolicies" : "civ"}
           />
         )}
         {tab === "settings" && (

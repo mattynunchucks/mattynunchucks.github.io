@@ -31,6 +31,6 @@ export function buildInitState() {
     pendingEraChoice:       null,
     civEchoStudyLevel:      0,
     cultureSurgeEndsAt:     0,
-    cultureSurgeUsed:       false,
+    cultureSurgeLastUsedAt: 0,
   };
 }
