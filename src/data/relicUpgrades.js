@@ -14,11 +14,12 @@ export const RELIC_UPGRADES = [
     cost: 4,
   },
   {
-    id:   "ancestral_memory",
-    name: "Ancestral Memory",
-    icon: "📜",
-    desc: "Policies are preserved through Dark Ages",
-    cost: 7,
+    id:       "ancestral_memory",
+    name:     "Ancestral Memory",
+    icon:     "📜",
+    desc:     "Policies are preserved through Dark Ages",
+    cost:     7,
+    echoCost: 50,
   },
   {
     id:   "dark_wisdom",

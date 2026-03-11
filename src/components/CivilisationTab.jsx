@@ -124,8 +124,10 @@ export default function CivilisationTab({ state, theme, buyCivConverter, dismiss
                 </div>
               )}
               {RELIC_UPGRADES.map(up => {
-                const owned     = purchasedRelicUpgrades.includes(up.id);
-                const canAfford = !owned && relics >= up.cost;
+                const owned          = purchasedRelicUpgrades.includes(up.id);
+                const hasRelics      = relics >= up.cost;
+                const hasEchoes      = !up.echoCost || (state.echoes || 0) >= up.echoCost;
+                const canAfford      = !owned && hasRelics && hasEchoes;
                 return (
                   <div key={up.id} style={{
                     display: "grid", gridTemplateColumns: "1fr auto", alignItems: "center",
@@ -140,7 +142,8 @@ export default function CivilisationTab({ state, theme, buyCivConverter, dismiss
                       </div>
                       <div style={{ fontSize: "0.58rem", color: owned ? "#554433" : "#998844", marginTop: "2px" }}>{up.desc}</div>
                       <div style={{ fontSize: "0.54rem", color: "#4a3010", marginTop: "3px" }}>
-                        Cost: <span style={{ color: "#cc994488" }}>{up.cost} Relic{up.cost !== 1 ? "s" : ""} 🏺</span>
+                        Cost: <span style={{ color: hasRelics ? "#cc994488" : "#cc4444aa" }}>{up.cost} Relic{up.cost !== 1 ? "s" : ""} 🏺</span>
+                        {up.echoCost && <span style={{ color: hasEchoes ? "#88aaffaa" : "#cc4444aa", marginLeft: "8px" }}>{up.echoCost} Echoes ✨</span>}
                       </div>
                     </div>
                     {!owned && (

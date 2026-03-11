@@ -149,12 +149,11 @@ export default function UniverseGame() {
     setState(s => {
       const relicUpgrades    = s.purchasedRelicUpgrades || [];
       const count            = (s.darkAgesCount || 0) + 1;
-      const hasLegacy        = (s.purchasedUpgrades || []).includes("civ_legacy");
       const hasMemory        = relicUpgrades.includes("ancestral_memory");
       const hasCascade       = relicUpgrades.includes("relic_cascade");
       const hasFoundations   = relicUpgrades.includes("ancient_foundations");
       const hasDarkWisdom    = relicUpgrades.includes("dark_wisdom");
-      const keepPolicies     = hasLegacy || hasMemory;
+      const keepPolicies     = hasMemory;
       const relicGain        = 1 + (hasCascade ? Math.floor((s.darkAgesCount || 0) / 5) : 0);
       const darkBase         = hasDarkWisdom ? 1.1 : 1.05;
       const startTribes      = hasFoundations ? 100 : 0;
@@ -288,9 +287,11 @@ export default function UniverseGame() {
       if (!up) return s;
       if ((s.purchasedRelicUpgrades || []).includes(upId)) return s;
       if ((s.relics || 0) < up.cost) return s;
+      if (up.echoCost && (s.echoes || 0) < up.echoCost) return s;
       return {
         ...s,
         relics:                 (s.relics || 0) - up.cost,
+        echoes:                 (s.echoes || 0) - (up.echoCost || 0),
         purchasedRelicUpgrades: [...(s.purchasedRelicUpgrades || []), upId],
         log: [`🏺 ${up.name} — ${up.desc}`, ...s.log.slice(0, 49)],
       };
