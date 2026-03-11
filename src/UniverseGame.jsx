@@ -157,6 +157,12 @@ export default function UniverseGame() {
       const relicGain        = 1 + (hasCascade ? Math.floor((s.darkAgesCount || 0) / 5) : 0);
       const darkBase         = hasDarkWisdom ? 1.1 : 1.05;
       const startTribes      = hasFoundations ? 100 : 0;
+      // Drop quark-only civ upgrades (they don't persist through Dark Ages)
+      const keptUpgrades = (s.purchasedUpgrades || []).filter(id => {
+        const up = UPGRADES.find(u => u.id === id);
+        if (!up || !up.requiresCiv) return true;  // keep non-civ upgrades
+        return up.cost[1] > 0;                     // keep only echo-cost civ upgrades
+      });
       return {
         ...s,
         civAmounts:        s.civAmounts.map(() => 0),
@@ -166,6 +172,7 @@ export default function UniverseGame() {
         firedEras:         [],
         eraChoices:        {},
         purchasedPolicies: keepPolicies ? (s.purchasedPolicies || []) : [],
+        purchasedUpgrades: keptUpgrades,
         pendingEra:        null,
         pendingEraChoice:  null,
         darkAgesCount:     count,

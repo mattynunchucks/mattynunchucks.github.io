@@ -64,14 +64,14 @@ export const UPGRADES = [
   // ── Culture production boosts ────────────────────────────────────────────
   { id: "civprod2q",   name: "Cultural Awakening",    desc: "Culture production ×2",                              cost: [5000000000,   0], tier: -1, type: "civprod",    value: 2, requiresCiv: true },
   { id: "civprod5q",   name: "Age of Enlightenment",  desc: "Culture production ×5",                              cost: [500000000000, 0], tier: -1, type: "civprod",    value: 5, requiresCiv: true },
-  { id: "civprod3e",   name: "Eternal Flame",          desc: "Culture production ×3 (permanent)",                  cost: [0,  20],         tier: -1, type: "civprod",    value: 3, requiresCiv: true },
-  { id: "civfestival", name: "Cultural Festival",      desc: "Unlock a 60s ×10 culture surge once per run",        cost: [0,  15],         tier: -1, type: "civfestival", value: 1, requiresCiv: true },
+  { id: "civprod3e",   name: "Eternal Flame",          desc: "Culture production ×3 (permanent)",                  cost: [0, 100],         tier: -1, type: "civprod",    value: 3, requiresCiv: true },
+  { id: "civfestival", name: "Cultural Festival",      desc: "Unlock a 60s ×10 culture surge once per run",        cost: [0,  75],         tier: -1, type: "civfestival", value: 1, requiresCiv: true },
 
   // ── Civilisation upgrades ─────────────────────────────────────────────────
-  { id: "civ_assemble", name: "Civilisation Assembler", desc: "Auto-buys all Civilisation tier converters when affordable",    cost: [0,  15], tier: -1, type: "civassemble", value: 1 },
-  { id: "civ_autopol",  name: "Auto Policy",            desc: "Automatically enacts Policies when you have enough Culture",    cost: [0,  20], tier: -1, type: "civautopol",  value: 1 },
-  { id: "civ_legacy",   name: "Cultural Legacy",        desc: "Purchased Policies survive Dark Ages resets",                  cost: [0,  25], tier: -1, type: "civlegacy",   value: 1 },
-  { id: "civ_archive",  name: "Grand Archive",          desc: "Era tech choices grant double their effect",                   cost: [0,  50], tier: -1, type: "civarchive",  value: 1 },
+  { id: "civ_assemble", name: "Civilisation Assembler", desc: "Auto-buys all Civilisation tier converters when affordable",    cost: [0,  15], tier: -1, type: "civassemble", value: 1, requiresCiv: true },
+  { id: "civ_autopol",  name: "Auto Policy",            desc: "Automatically enacts Policies when you have enough Culture",    cost: [0,  20], tier: -1, type: "civautopol",  value: 1, requiresCiv: true },
+  { id: "civ_legacy",   name: "Cultural Legacy",        desc: "Purchased Policies survive Dark Ages resets",                  cost: [0, 100], tier: -1, type: "civlegacy",   value: 1, requiresCiv: true },
+  { id: "civ_archive",  name: "Grand Archive",          desc: "Era tech choices grant double their effect",                   cost: [0, 200], tier: -1, type: "civarchive",  value: 1, requiresCiv: true },
 
   // ── Assemblers ───────────────────────────────────────────────────────────────
   { id: "auto0",      name: "Quark Assembler",      desc: "Auto-buys Quark converters",      cost: [0,   2],  tier: 0,  type: "autobuy", value: 0  },
