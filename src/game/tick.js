@@ -78,6 +78,13 @@ export function applyTick(state, dt) {
     }
   }
 
+  // ── Science bonuses (computed first — used in Civ tick) ────────────────────
+  const { sciProdMult, sciTierMult, sciGlobal, civGlobalBonus, universeMindMult } = calcScienceBonuses(
+    state.sciDiscoveries, state.sciPaths, state.paradigmShiftCount,
+    state.purchasedInnovations, state.purchasedBreakthroughs
+  );
+  const sciCivBonus = state.sciUnlocked ? civGlobalBonus : 1;
+
   // ── Civilisation tick ──────────────────────────────────────────────────────
   const civAmounts    = [...(state.civAmounts    || CIV_TIERS.map(() => 0))];
   const civConverters = [...(state.civConverters || CIV_TIERS.map(() => 0))];
@@ -149,10 +156,6 @@ export function applyTick(state, dt) {
   // ── Science tick ───────────────────────────────────────────────────────────
   const sciAmounts    = [...(state.sciAmounts    || Array(7).fill(0))];
   const sciConverters = [...(state.sciConverters || Array(7).fill(0))];
-  const { sciProdMult, sciTierMult, sciGlobal, civGlobalBonus, universeMindMult } = calcScienceBonuses(
-    state.sciDiscoveries, state.sciPaths, state.paradigmShiftCount,
-    state.purchasedInnovations, state.purchasedBreakthroughs
-  );
   let sciProduced = 0;
 
   if (state.sciUnlocked) {
@@ -169,9 +172,6 @@ export function applyTick(state, dt) {
   const science         = (state.science        || 0) + sciProduced;
   const totalScienceEver = (state.totalScienceEver || 0) + sciProduced;
   const newSciEra        = sciEraIndex(totalScienceEver);
-
-  // Apply Science → Civ global bonus
-  const sciCivBonus = state.sciUnlocked ? civGlobalBonus : 1;
 
   // Draw wildcards when a new era starts
   let sciWildcards = state.sciWildcards || {};
