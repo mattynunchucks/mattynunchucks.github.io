@@ -1,5 +1,6 @@
 import { BASE_COST, COST_SCALE } from "../data/elements";
 import { CIV_BASE_COST, CIV_COST_SCALE, CIV_TIER_SCALE } from "../data/civilisation";
+export { sciConverterCost, sciMaxConverters } from "../data/science";
 
 export function converterCost(tier, owned) {
   if (tier === 0) return 0;

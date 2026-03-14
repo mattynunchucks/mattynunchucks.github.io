@@ -8,8 +8,9 @@ import { RELIC_UPGRADES } from "./data/relicUpgrades";
 import { fmt, fmtTime } from "./utils/format";
 import { saveGame, loadGame, exportSaveFile, parseSaveFile } from "./utils/save";
 
-import { calcStats, prestigeMultiplier, calcEchoesFromRun } from "./game/stats";
+import { calcStats, prestigeMultiplier, calcEchoesFromRun, calcScienceBonuses } from "./game/stats";
 import { converterCost, maxConverters, civConverterCost, civMaxConverters } from "./game/converters";
+import { SCI_UNLOCK_RELICS, SCI_UNLOCK_VISIBLE_RELICS, SCI_TIERS, INNOVATION_UPGRADES, BREAKTHROUGH_UPGRADES, allScienceDiscoveries } from "./data/science";
 import { applyTick } from "./game/tick";
 import { buildInitState } from "./game/state";
 
@@ -19,6 +20,7 @@ import GameTab          from "./components/GameTab";
 import UpgradesTab      from "./components/UpgradesTab";
 import PrestigeTab      from "./components/PrestigeTab";
 import CivilisationTab  from "./components/CivilisationTab";
+import ScienceTab       from "./components/ScienceTab";
 import SettingsTab      from "./components/SettingsTab";
 import { SaveModal, LoadModal, DeleteConfirmModal } from "./components/Modals";
 
@@ -105,7 +107,12 @@ export default function UniverseGame() {
   const hasDarkWisdom           = purchasedRelicUpgrades.includes("dark_wisdom");
   const hasRelicResonance       = purchasedRelicUpgrades.includes("relic_resonance");
   const relicCultureMult        = hasRelicResonance ? (1 + 0.02 * (state.relics || 0)) : 1;
-  const prestigePreview    = Math.floor(calcEchoesFromRun(state.totalQuarksEarned) * civEchoStudyBonus);
+  const sciBonus           = calcScienceBonuses(
+    state.sciDiscoveries, state.sciPaths, state.paradigmShiftCount,
+    state.purchasedInnovations, state.purchasedBreakthroughs
+  );
+  const sciVisible         = (state.totalRelicsEarned || 0) >= SCI_UNLOCK_VISIBLE_RELICS;
+  const prestigePreview    = Math.floor(calcEchoesFromRun(state.totalQuarksEarned) * civEchoStudyBonus * (sciBonus.echoMult || 1) * (1 + (sciBonus.echoBonus || 0)));
   const canPrestige        = prestigePreview > 0;
   const hasAffordableUpgrade = UPGRADES.some(up =>
     !state.purchasedUpgrades.includes(up.id) &&
@@ -154,7 +161,10 @@ export default function UniverseGame() {
       const hasFoundations   = relicUpgrades.includes("ancient_foundations");
       const hasDarkWisdom    = relicUpgrades.includes("dark_wisdom");
       const keepPolicies     = hasMemory;
-      const relicGain        = 1 + (hasCascade ? Math.floor((s.darkAgesCount || 0) / 5) : 0);
+      const sb               = calcScienceBonuses(s.sciDiscoveries, s.sciPaths, s.paradigmShiftCount, s.purchasedInnovations, s.purchasedBreakthroughs);
+      const sciRelicBonus    = Math.floor(sb.relicBonus || 0);
+      const hasDivParadigm   = (s.purchasedInnovations || []).includes("paradigm_dividend");
+      const relicGain        = 1 + (hasCascade ? Math.floor((s.darkAgesCount || 0) / 5) : 0) + sciRelicBonus;
       const darkBase         = hasDarkWisdom ? 1.1 : 1.05;
       const startTribes      = hasFoundations ? 100 : 0;
       // Drop quark-only civ upgrades (they don't persist through Dark Ages)
@@ -305,10 +315,145 @@ export default function UniverseGame() {
     });
   }, []);
 
+  // ── Science handlers ─────────────────────────────────────────────────────────
+
+  const unlockScience = useCallback(() => {
+    setState(s => {
+      if (s.sciUnlocked || (s.relics || 0) < SCI_UNLOCK_RELICS) return s;
+      return {
+        ...s,
+        sciUnlocked: true,
+        relics: (s.relics || 0) - SCI_UNLOCK_RELICS,
+        log: [`⚗ Science unlocked — the Renaissance begins`, ...s.log.slice(0, 49)],
+      };
+    });
+  }, []);
+
+  const buySciConverter = useCallback((tier) => {
+    setState(s => {
+      if (!s.sciUnlocked) return s;
+      const sciConverters = [...(s.sciConverters || Array(7).fill(0))];
+      const sciAmounts    = [...(s.sciAmounts    || Array(7).fill(0))];
+      const cap        = tier === 0 ? Infinity : sciConverters[tier - 1];
+      if (sciConverters[tier] >= cap) return s;
+      // Matches sciConverterCost() in science.js
+      const actualCost = tier === 0
+        ? Math.floor(50 * Math.pow(1.2, sciConverters[0]))
+        : Math.floor(100 * Math.pow(2, tier - 1) * Math.pow(1.15, sciConverters[tier]));
+      if (tier === 0) {
+        if ((s.culture || 0) < actualCost) return s;
+        sciConverters[0] += 1;
+        return { ...s, culture: (s.culture || 0) - actualCost, sciConverters,
+          log: [`📜 Recruited Scholar #${sciConverters[0]}`, ...s.log.slice(0, 49)] };
+      } else {
+        if ((sciAmounts[tier - 1] || 0) < actualCost) return s;
+        sciAmounts[tier - 1] -= actualCost;
+        sciConverters[tier]  += 1;
+        return { ...s, sciAmounts, sciConverters,
+          log: [`${SCI_TIERS[tier].emoji} Built ${SCI_TIERS[tier].name} #${sciConverters[tier]}`, ...s.log.slice(0, 49)] };
+      }
+    });
+  }, []);
+
+  const purchaseDiscovery = useCallback((discId) => {
+    setState(s => {
+      if (!s.sciUnlocked) return s;
+      if ((s.sciDiscoveries || []).includes(discId)) return s;
+      const disc = allScienceDiscoveries().find(d => d.id === discId);
+      if (!disc) return s;
+      const depsOk = (disc.deps || []).every(d => (s.sciDiscoveries || []).includes(d));
+      if (!depsOk) return s;
+      const sb = calcScienceBonuses(s.sciDiscoveries, s.sciPaths, s.paradigmShiftCount, s.purchasedInnovations, s.purchasedBreakthroughs);
+      const cost = Math.floor(disc.cost * sb.discoveryCostMult);
+      if ((s.science || 0) < cost) return s;
+      return {
+        ...s,
+        science:        (s.science || 0) - cost,
+        sciDiscoveries: [...(s.sciDiscoveries || []), discId],
+        log: [`🔭 Discovered: ${disc.name}`, ...s.log.slice(0, 49)],
+      };
+    });
+  }, []);
+
+  const chooseSciPath = useCallback((eraId, pathId) => {
+    setState(s => {
+      if ((s.sciPaths || {})[eraId]) return s;
+      return {
+        ...s,
+        sciPaths: { ...(s.sciPaths || {}), [eraId]: pathId },
+        log: [`🧭 Research direction set: ${pathId}`, ...s.log.slice(0, 49)],
+      };
+    });
+  }, []);
+
+  const doParadigmShift = useCallback(() => {
+    setState(s => {
+      const sb = calcScienceBonuses(s.sciDiscoveries, s.sciPaths, s.paradigmShiftCount, s.purchasedInnovations, s.purchasedBreakthroughs);
+      if (!sb.paradigmReady) return s;
+      const btsEarned    = Math.max(1, Math.floor(Math.log2(Math.max(2, (s.totalScienceEver || 0) / 500000)) * sb.breakthroughMult));
+      const hasParadigmDiv = (s.purchasedInnovations || []).includes("paradigm_dividend");
+      const innoEarned   = 1 + (hasParadigmDiv ? 1 : 0);
+      // Keep one retained path if innovation purchased
+      const retainedPaths = {};
+      if ((s.purchasedInnovations || []).includes("retained_research")) {
+        const firstPath = Object.entries(s.sciPaths || {})[0];
+        if (firstPath) retainedPaths[firstPath[0]] = firstPath[1];
+      }
+      return {
+        ...s,
+        sciConverters:           Array(7).fill(0),
+        sciAmounts:              Array(7).fill(0),
+        science:                 0,
+        totalScienceEver:        0,
+        sciEra:                  0,
+        sciPaths:                retainedPaths,
+        sciDiscoveries:          [],
+        sciWildcards:            {},
+        paradigmShiftCount:      (s.paradigmShiftCount || 0) + 1,
+        breakthroughs:           (s.breakthroughs || 0) + btsEarned,
+        totalBreakthroughsEarned:(s.totalBreakthroughsEarned || 0) + btsEarned,
+        innovations:             (s.innovations || 0) + innoEarned,
+        totalInnovationsEarned:  (s.totalInnovationsEarned || 0) + innoEarned,
+        log: [`🔄 Paradigm Shift #${(s.paradigmShiftCount || 0) + 1} — +${btsEarned} Breakthroughs, +${innoEarned} Innovations`, ...s.log.slice(0, 49)],
+      };
+    });
+  }, []);
+
+  const buyInnovation = useCallback((upId) => {
+    setState(s => {
+      const up = INNOVATION_UPGRADES.find(u => u.id === upId);
+      if (!up) return s;
+      if ((s.purchasedInnovations || []).includes(upId)) return s;
+      if ((s.innovations || 0) < up.cost) return s;
+      return {
+        ...s,
+        innovations:          (s.innovations || 0) - up.cost,
+        purchasedInnovations: [...(s.purchasedInnovations || []), upId],
+        log: [`💡 Innovation: ${up.name}`, ...s.log.slice(0, 49)],
+      };
+    });
+  }, []);
+
+  const buyBreakthrough = useCallback((upId) => {
+    setState(s => {
+      const up = BREAKTHROUGH_UPGRADES.find(u => u.id === upId);
+      if (!up) return s;
+      if ((s.purchasedBreakthroughs || []).includes(upId)) return s;
+      if ((s.breakthroughs || 0) < up.cost) return s;
+      return {
+        ...s,
+        breakthroughs:          (s.breakthroughs || 0) - up.cost,
+        purchasedBreakthroughs: [...(s.purchasedBreakthroughs || []), upId],
+        log: [`🌟 Breakthrough: ${up.name}`, ...s.log.slice(0, 49)],
+      };
+    });
+  }, []);
+
   const doPrestige = useCallback(() => {
     setState(s => {
       const studyBonus = 1 + 0.05 * (s.civEchoStudyLevel || 0);
-      const gained     = Math.floor(calcEchoesFromRun(s.totalQuarksEarned) * studyBonus);
+      const sb         = calcScienceBonuses(s.sciDiscoveries, s.sciPaths, s.paradigmShiftCount, s.purchasedInnovations, s.purchasedBreakthroughs);
+      const gained     = Math.floor(calcEchoesFromRun(s.totalQuarksEarned) * studyBonus * (sb.echoMult || 1) * (1 + (sb.echoBonus || 0)));
       const keptUpgrades = s.purchasedUpgrades.filter(id => {
         const up = UPGRADES.find(u => u.id === id);
         return up && up.cost[1] > 0;
@@ -328,11 +473,28 @@ export default function UniverseGame() {
         eraChoices:             s.eraChoices || {},
         purchasedPolicies:      s.purchasedPolicies || [],
         darkAgesCount:          s.darkAgesCount || 0,
-        civEchoStudyLevel:      s.civEchoStudyLevel || 0,
-        cultureSurgeLastUsedAt: s.cultureSurgeLastUsedAt || 0,
-        relics:                 s.relics || 0,
-        totalRelicsEarned:      s.totalRelicsEarned || 0,
-        purchasedRelicUpgrades: s.purchasedRelicUpgrades || [],
+        civEchoStudyLevel:       s.civEchoStudyLevel || 0,
+        cultureSurgeLastUsedAt:  s.cultureSurgeLastUsedAt || 0,
+        relics:                  s.relics || 0,
+        totalRelicsEarned:       s.totalRelicsEarned || 0,
+        purchasedRelicUpgrades:  s.purchasedRelicUpgrades || [],
+        // Science persists through prestige
+        sciUnlocked:             s.sciUnlocked || false,
+        sciConverters:           s.sciConverters || Array(7).fill(0),
+        sciAmounts:              s.sciAmounts    || Array(7).fill(0),
+        science:                 s.science       || 0,
+        totalScienceEver:        s.totalScienceEver || 0,
+        sciEra:                  s.sciEra        || 0,
+        sciPaths:                s.sciPaths      || {},
+        sciDiscoveries:          s.sciDiscoveries || [],
+        sciWildcards:            s.sciWildcards  || {},
+        paradigmShiftCount:      s.paradigmShiftCount || 0,
+        breakthroughs:           s.breakthroughs || 0,
+        totalBreakthroughsEarned:s.totalBreakthroughsEarned || 0,
+        innovations:             s.innovations   || 0,
+        totalInnovationsEarned:  s.totalInnovationsEarned || 0,
+        purchasedInnovations:    s.purchasedInnovations || [],
+        purchasedBreakthroughs:  s.purchasedBreakthroughs || [],
       };
     });
     setShowPrestigeConfirm(false);
@@ -446,95 +608,145 @@ export default function UniverseGame() {
           </div>
         )}
 
-        {/* Nav */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "16px" }}>
-          <div style={{ display: "flex", alignItems: "flex-start", gap: "4px" }}>
-            {/* Universe column */}
-            <div style={{ display: "flex", flexDirection: "column" }}>
-              <button onClick={() => setTab("game")} style={{
-                textAlign: "center", whiteSpace: "nowrap",
-                background: (tab === "game" || tab === "upgrades") ? "#0d1e10" : "#080e0a",
-                border: "1px solid " + ((tab === "game" || tab === "upgrades") ? "#6bcb77" : "#1a2a40"),
-                borderBottom: (tab === "game" || tab === "upgrades") ? "2px solid #6bcb77" : "1px solid #1a2a40",
-                color: (tab === "game" || tab === "upgrades") ? "#6bcb77" : "#2a4a30",
-                borderRadius: "6px 6px 0 0", padding: "10px 16px", cursor: "pointer",
-                fontSize: "0.72rem", letterSpacing: "0.16em",
-                fontWeight: (tab === "game" || tab === "upgrades") ? "bold" : "normal",
-                transition: "all 0.15s", fontFamily: "'Courier New', monospace",
-              }}>⚛ UNIVERSE</button>
-              <button onClick={() => setTab("upgrades")} style={{
-                textAlign: "center", whiteSpace: "nowrap",
-                background: tab === "upgrades" ? "#1a1a2e" : "#0a0a18",
-                border: "1px solid " + (tab === "upgrades" ? "#c77dff" : "#4a3a6a"),
-                borderTop: "1px solid #1a2a40",
-                color: tab === "upgrades" ? "#c77dff" : "#7a5aaa",
-                borderRadius: "0 0 6px 6px", padding: "4px 16px", cursor: "pointer",
-                fontSize: "0.52rem", letterSpacing: "0.14em",
-                fontWeight: tab === "upgrades" ? "bold" : "normal",
-                transition: "all 0.15s", fontFamily: "'Courier New', monospace",
-              }}>
-                UPGRADES
-                {hasAffordableUpgrade && <span style={{ marginLeft: "5px", display: "inline-block", width: "6px", height: "6px", borderRadius: "50%", background: "#e8c44a", verticalAlign: "middle", boxShadow: "0 0 4px #e8c44a" }} />}
-              </button>
-            </div>
+        {/* Nav — two rows: main tabs row + sub-tabs row */}
+        <div style={{ marginBottom: "16px" }}>
 
-            {/* Civilisation column */}
+          {/* Row 1: main tabs, equal-width, full span */}
+          <div style={{ display: "flex", gap: "3px" }}>
+            {/* UNIVERSE */}
+            <button onClick={() => setTab("game")} style={{
+              flex: 1, minWidth: 0, textAlign: "center",
+              background: (tab === "game" || tab === "upgrades") ? "#0d1e10" : "#080e0a",
+              border: "1px solid " + ((tab === "game" || tab === "upgrades") ? "#6bcb77" : "#1a2a40"),
+              borderBottom: (tab === "game" || tab === "upgrades") ? "2px solid #6bcb77" : "1px solid #1a2a40",
+              color: (tab === "game" || tab === "upgrades") ? "#6bcb77" : "#2a4a30",
+              borderRadius: "6px 6px 0 0", padding: "8px 6px", cursor: "pointer",
+              fontSize: "0.62rem", letterSpacing: "0.1em",
+              fontWeight: (tab === "game" || tab === "upgrades") ? "bold" : "normal",
+              transition: "all 0.15s", fontFamily: "'Courier New', monospace",
+            }}>⚛ UNIVERSE</button>
+
+            {/* CIVILISATION (unlocked) */}
             {state.civUnlocked && (
-              <div style={{ display: "flex", flexDirection: "column" }}>
-                <button onClick={() => setTab("civ")} style={{
-                  textAlign: "center", whiteSpace: "nowrap",
-                  background: (tab === "civ" || tab === "civpolicies") ? "#1a1208" : "#100e06",
-                  border: "1px solid " + ((tab === "civ" || tab === "civpolicies") ? "#c4a35a" : "#2a2010"),
-                  borderBottom: (tab === "civ" || tab === "civpolicies") ? "2px solid #c4a35a" : "1px solid #2a2010",
-                  color: (tab === "civ" || tab === "civpolicies") ? "#c4a35a" : "#5a4a20",
-                  borderRadius: "6px 6px 0 0", padding: "10px 16px", cursor: "pointer",
-                  fontSize: "0.72rem", letterSpacing: "0.16em",
-                  fontWeight: (tab === "civ" || tab === "civpolicies") ? "bold" : "normal",
-                  transition: "all 0.15s", fontFamily: "'Courier New', monospace",
-                }}>🏕 CIVILISATION</button>
-                <button onClick={() => setTab("civpolicies")} style={{
-                  textAlign: "center", whiteSpace: "nowrap",
-                  background: tab === "civpolicies" ? "#1a1208" : "#0e0b04",
-                  border: "1px solid " + (tab === "civpolicies" ? "#c4a35a" : "#3a2a10"),
-                  borderTop: "1px solid #2a2010",
-                  color: tab === "civpolicies" ? "#c4a35a" : "#7a5a20",
-                  borderRadius: "0 0 6px 6px", padding: "4px 16px", cursor: "pointer",
-                  fontSize: "0.52rem", letterSpacing: "0.14em",
-                  fontWeight: tab === "civpolicies" ? "bold" : "normal",
-                  transition: "all 0.15s", fontFamily: "'Courier New', monospace",
-                }}>POLICIES</button>
-              </div>
+              <button onClick={() => setTab("civ")} style={{
+                flex: 1, minWidth: 0, textAlign: "center",
+                background: (tab === "civ" || tab === "civpolicies") ? "#1a1208" : "#100e06",
+                border: "1px solid " + ((tab === "civ" || tab === "civpolicies") ? "#c4a35a" : "#2a2010"),
+                borderBottom: (tab === "civ" || tab === "civpolicies") ? "2px solid #c4a35a" : "1px solid #2a2010",
+                color: (tab === "civ" || tab === "civpolicies") ? "#c4a35a" : "#5a4a20",
+                borderRadius: "6px 6px 0 0", padding: "8px 6px", cursor: "pointer",
+                fontSize: "0.62rem", letterSpacing: "0.1em",
+                fontWeight: (tab === "civ" || tab === "civpolicies") ? "bold" : "normal",
+                transition: "all 0.15s", fontFamily: "'Courier New', monospace",
+              }}>🏕 CIV</button>
             )}
+
+            {/* CIVILISATION unlock button */}
             {!state.civUnlocked && state.totalMindsEver >= CIV_UNLOCK_MINDS * 0.5 && (
               <button onClick={unlockCiv} disabled={state.totalMindsEver < CIV_UNLOCK_MINDS} style={{
-                textAlign: "center", whiteSpace: "nowrap", alignSelf: "flex-start",
+                flex: 1, minWidth: 0, textAlign: "center",
                 background: state.totalMindsEver >= CIV_UNLOCK_MINDS ? "#1a1208" : "#0a0a06",
                 border: "1px solid " + (state.totalMindsEver >= CIV_UNLOCK_MINDS ? "#c4a35a88" : "#2a2010"),
-                borderRadius: "6px", padding: "10px 14px",
+                borderRadius: "6px 6px 0 0", padding: "8px 6px",
                 cursor: state.totalMindsEver >= CIV_UNLOCK_MINDS ? "pointer" : "not-allowed",
-                fontSize: "0.6rem", letterSpacing: "0.12em",
+                fontSize: "0.52rem", letterSpacing: "0.06em",
                 color: state.totalMindsEver >= CIV_UNLOCK_MINDS ? "#c4a35a" : "#3a3010",
                 fontFamily: "'Courier New', monospace",
               }}>
-                🏕 {state.totalMindsEver >= CIV_UNLOCK_MINDS ? "UNLOCK CIVILISATION" : `CIVILISATION (${fmt(state.totalMindsEver)}/${fmt(CIV_UNLOCK_MINDS)} Minds)`}
+                {state.totalMindsEver >= CIV_UNLOCK_MINDS ? "🏕 UNLOCK CIV" : `🏕 CIV (${fmt(state.totalMindsEver)}/${fmt(CIV_UNLOCK_MINDS)})`}
               </button>
             )}
-          </div>
 
-          {/* Prestige button */}
-          <div style={{ display: "flex", alignItems: "flex-end", alignSelf: "stretch" }}>
+            {/* SCIENCE (unlocked) */}
+            {sciVisible && state.sciUnlocked && (
+              <button onClick={() => setTab("science")} style={{
+                flex: 1, minWidth: 0, textAlign: "center",
+                background: (tab === "science" || tab === "research") ? "#050a18" : "#030610",
+                border: "1px solid " + ((tab === "science" || tab === "research") ? "#4d96ff" : "#1a2a40"),
+                borderBottom: (tab === "science" || tab === "research") ? "2px solid #4d96ff" : "1px solid #1a2a40",
+                color: (tab === "science" || tab === "research") ? "#4d96ff" : "#1a3050",
+                borderRadius: "6px 6px 0 0", padding: "8px 6px", cursor: "pointer",
+                fontSize: "0.62rem", letterSpacing: "0.1em",
+                fontWeight: (tab === "science" || tab === "research") ? "bold" : "normal",
+                transition: "all 0.15s", fontFamily: "'Courier New', monospace",
+              }}>⚗ SCIENCE</button>
+            )}
+
+            {/* SCIENCE unlock button */}
+            {sciVisible && !state.sciUnlocked && (
+              <button onClick={unlockScience} disabled={(state.relics || 0) < SCI_UNLOCK_RELICS} style={{
+                flex: 1, minWidth: 0, textAlign: "center",
+                background: (state.relics || 0) >= SCI_UNLOCK_RELICS ? "#050a18" : "#020408",
+                border: "1px solid " + ((state.relics || 0) >= SCI_UNLOCK_RELICS ? "#4d96ff88" : "#1a2a40"),
+                borderRadius: "6px 6px 0 0", padding: "8px 6px",
+                cursor: (state.relics || 0) >= SCI_UNLOCK_RELICS ? "pointer" : "not-allowed",
+                fontSize: "0.52rem", letterSpacing: "0.06em",
+                color: (state.relics || 0) >= SCI_UNLOCK_RELICS ? "#4d96ff" : "#1a3050",
+                fontFamily: "'Courier New', monospace",
+              }}>
+                {(state.relics || 0) >= SCI_UNLOCK_RELICS
+                  ? `⚗ UNLOCK SCI (${SCI_UNLOCK_RELICS}🏺)`
+                  : `⚗ SCI (${state.relics || 0}/${SCI_UNLOCK_RELICS}🏺)`}
+              </button>
+            )}
+
+            {/* PRESTIGE */}
             <button onClick={() => setTab("prestige")} style={{
-              textAlign: "center", whiteSpace: "nowrap", alignSelf: "flex-start",
+              flex: 1, minWidth: 0, textAlign: "center",
               background: tab === "prestige" ? "#1a1a2e" : "#0d0d1e",
               border: "1px solid " + (tab === "prestige" ? "#c77dff" : "#4a3a6a"),
               borderBottom: tab === "prestige" ? "2px solid #c77dff" : "1px solid #4a3a6a",
               color: tab === "prestige" ? "#c77dff" : "#7a5aaa",
-              borderRadius: "6px 6px 0 0", padding: "10px 16px", cursor: "pointer",
-              fontSize: "0.72rem", letterSpacing: "0.16em",
+              borderRadius: "6px 6px 0 0", padding: "8px 6px", cursor: "pointer",
+              fontSize: "0.62rem", letterSpacing: "0.1em",
               fontWeight: tab === "prestige" ? "bold" : "normal",
               transition: "all 0.15s", fontFamily: "'Courier New', monospace",
             }}>{`PRESTIGE${canPrestige ? " ★" : ""}`}</button>
           </div>
+
+          {/* Row 2: sub-tabs, left-aligned, shown for unlocked systems */}
+          <div style={{ display: "flex", gap: "3px", marginTop: "2px" }}>
+            <button onClick={() => setTab("upgrades")} style={{
+              textAlign: "center",
+              background: tab === "upgrades" ? "#1a1a2e" : "#0a0a18",
+              border: "1px solid " + (tab === "upgrades" ? "#c77dff" : "#4a3a6a"),
+              color: tab === "upgrades" ? "#c77dff" : "#7a5aaa",
+              borderRadius: "0 0 6px 6px", padding: "3px 14px", cursor: "pointer",
+              fontSize: "0.48rem", letterSpacing: "0.12em",
+              fontWeight: tab === "upgrades" ? "bold" : "normal",
+              transition: "all 0.15s", fontFamily: "'Courier New', monospace",
+            }}>
+              UPGRADES
+              {hasAffordableUpgrade && <span style={{ marginLeft: "4px", display: "inline-block", width: "5px", height: "5px", borderRadius: "50%", background: "#e8c44a", verticalAlign: "middle", boxShadow: "0 0 4px #e8c44a" }} />}
+            </button>
+
+            {state.civUnlocked && (
+              <button onClick={() => setTab("civpolicies")} style={{
+                textAlign: "center",
+                background: tab === "civpolicies" ? "#1a1208" : "#0e0b04",
+                border: "1px solid " + (tab === "civpolicies" ? "#c4a35a" : "#3a2a10"),
+                color: tab === "civpolicies" ? "#c4a35a" : "#7a5a20",
+                borderRadius: "0 0 6px 6px", padding: "3px 14px", cursor: "pointer",
+                fontSize: "0.48rem", letterSpacing: "0.12em",
+                fontWeight: tab === "civpolicies" ? "bold" : "normal",
+                transition: "all 0.15s", fontFamily: "'Courier New', monospace",
+              }}>POLICIES</button>
+            )}
+
+            {sciVisible && state.sciUnlocked && (
+              <button onClick={() => setTab("research")} style={{
+                textAlign: "center",
+                background: tab === "research" ? "#050a18" : "#020408",
+                border: "1px solid " + (tab === "research" ? "#4d96ff" : "#1a2a3a"),
+                color: tab === "research" ? "#4d96ff" : "#2a4a6a",
+                borderRadius: "0 0 6px 6px", padding: "3px 14px", cursor: "pointer",
+                fontSize: "0.48rem", letterSpacing: "0.12em",
+                fontWeight: tab === "research" ? "bold" : "normal",
+                transition: "all 0.15s", fontFamily: "'Courier New', monospace",
+              }}>RESEARCH</button>
+            )}
+          </div>
+
         </div>
 
         {/* Tab content */}
@@ -571,6 +783,18 @@ export default function UniverseGame() {
             relicCultureMult={relicCultureMult} hasDarkWisdom={hasDarkWisdom}
             buyRelicUpgrade={buyRelicUpgrade}
             view={tab === "civpolicies" ? "civpolicies" : "civ"}
+          />
+        )}
+        {(tab === "science" || tab === "research") && (
+          <ScienceTab
+            state={state} theme={theme}
+            view={tab === "research" ? "research" : "science"}
+            buySciConverter={buySciConverter}
+            purchaseDiscovery={purchaseDiscovery}
+            chooseSciPath={chooseSciPath}
+            doParadigmShift={doParadigmShift}
+            buyInnovation={buyInnovation}
+            buyBreakthrough={buyBreakthrough}
           />
         )}
         {tab === "settings" && (

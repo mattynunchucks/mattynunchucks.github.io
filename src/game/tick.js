@@ -2,8 +2,9 @@ import { ELEMENTS, BASE_RATE } from "../data/elements";
 import { UPGRADES } from "../data/upgrades";
 import { DISCOVERIES } from "../data/discoveries";
 import { CIV_TIERS, CIV_ERAS, CIV_BASE_RATE, CIV_POLICIES } from "../data/civilisation";
-import { calcStats, prestigeMultiplier, calcCivMindBonus, calcCivBonuses } from "./stats";
-import { maxConverters, converterCost, civMaxConverters, civConverterCost } from "./converters";
+import { SCI_TIERS, SCI_ERAS, SCI_BASE_RATE, SCI_WILDCARD_POOLS, sciEraIndex } from "../data/science";
+import { calcStats, prestigeMultiplier, calcCivMindBonus, calcCivBonuses, calcScienceBonuses } from "./stats";
+import { maxConverters, converterCost, civMaxConverters, civConverterCost, sciConverterCost, sciMaxConverters } from "./converters";
 
 export function applyTick(state, dt) {
   const { prodMult, globalMult, autobuyTiers, autoUpgrade, civAssemble, civAutoPolicy, civArchive, civProdBonus } = calcStats(
@@ -94,7 +95,7 @@ export function applyTick(state, dt) {
   if (state.civUnlocked) {
     for (let i = 0; i < CIV_TIERS.length; i++) {
       if (civConverters[i] > 0) {
-        const produced = civConverters[i] * CIV_BASE_RATE * Math.pow(1.5, i) * civProdMult[i] * civGlobalMult * civProdBonus * relicCultureMult * surgeMult * dt;
+        const produced = civConverters[i] * CIV_BASE_RATE * Math.pow(1.5, i) * civProdMult[i] * civGlobalMult * civProdBonus * relicCultureMult * surgeMult * sciCivBonus * dt;
         civAmounts[i] += produced;
         if (i === 0) cultureProduced += produced;
       }
@@ -145,6 +146,65 @@ export function applyTick(state, dt) {
     amounts[8] += converters[8] * BASE_RATE * prodMult[8] * globalMult * pMult * civMindBonus * dt;
   }
 
+  // ── Science tick ───────────────────────────────────────────────────────────
+  const sciAmounts    = [...(state.sciAmounts    || Array(7).fill(0))];
+  const sciConverters = [...(state.sciConverters || Array(7).fill(0))];
+  const { sciProdMult, sciTierMult, sciGlobal, civGlobalBonus, universeMindMult } = calcScienceBonuses(
+    state.sciDiscoveries, state.sciPaths, state.paradigmShiftCount,
+    state.purchasedInnovations, state.purchasedBreakthroughs
+  );
+  let sciProduced = 0;
+
+  if (state.sciUnlocked) {
+    for (let i = 0; i < SCI_TIERS.length; i++) {
+      if (sciConverters[i] <= 0) continue;
+      const tierMult = sciTierMult[i];
+      const prodMul  = i === 0 ? sciProdMult : 1;
+      const produced = sciConverters[i] * SCI_BASE_RATE * Math.pow(1.5, i) * tierMult * sciGlobal * prodMul * dt;
+      sciAmounts[i] += produced;
+      if (i === 0) sciProduced += produced;
+    }
+  }
+
+  const science         = (state.science        || 0) + sciProduced;
+  const totalScienceEver = (state.totalScienceEver || 0) + sciProduced;
+  const newSciEra        = sciEraIndex(totalScienceEver);
+
+  // Apply Science → Civ global bonus
+  const sciCivBonus = state.sciUnlocked ? civGlobalBonus : 1;
+
+  // Draw wildcards when a new era starts
+  let sciWildcards = state.sciWildcards || {};
+  if (state.sciUnlocked && newSciEra > (state.sciEra || 0)) {
+    sciWildcards = { ...sciWildcards };
+    for (let e = (state.sciEra || 0) + 1; e <= newSciEra; e++) {
+      const era = SCI_ERAS[e];
+      if (!sciWildcards[era.id]) {
+        const pool   = [...(SCI_WILDCARD_POOLS[era.id] || [])];
+        const drawn  = [];
+        // extraWildcard from Open Science path adds 1 more draw
+        const { extraWildcard } = calcScienceBonuses(
+          state.sciDiscoveries, state.sciPaths, state.paradigmShiftCount,
+          state.purchasedInnovations, state.purchasedBreakthroughs
+        );
+        const drawCount = Math.min(2 + Math.floor(extraWildcard), pool.length);
+        while (drawn.length < drawCount && pool.length > 0) {
+          const idx = Math.floor(Math.random() * pool.length);
+          drawn.push(pool.splice(idx, 1)[0].id);
+        }
+        sciWildcards[era.id] = drawn;
+      }
+    }
+  }
+
+  // Science → Universe: mind production bonus
+  const sciMindBonus = state.sciUnlocked
+    ? SCI_ERAS.reduce((sum, era, i) => i <= newSciEra ? sum + era.sciMindBonus : sum, 0) * universeMindMult
+    : 0;
+  if (sciMindBonus > 0 && converters[8] > 0) {
+    amounts[8] += converters[8] * BASE_RATE * prodMult[8] * globalMult * pMult * sciMindBonus * dt;
+  }
+
   // ── Era detection ──────────────────────────────────────────────────────────
   const firedEras    = state.firedEras  || [];
   let newEra         = state.pendingEra || null;
@@ -172,6 +232,8 @@ export function applyTick(state, dt) {
     civAmounts, civConverters, culture, totalCultureEver,
     pendingEra: newEra, firedEras: newFiredEras,
     pendingEraChoice,
+    sciAmounts, sciConverters, science, totalScienceEver,
+    sciEra: newSciEra, sciWildcards,
     lastTick: Date.now(),
   };
 }

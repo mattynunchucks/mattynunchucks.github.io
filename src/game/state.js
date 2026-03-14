@@ -35,5 +35,22 @@ export function buildInitState() {
     relics:                 0,
     totalRelicsEarned:      0,
     purchasedRelicUpgrades: [],
+    // ── Science tab ───────────────────────────────────────────────────────────
+    sciUnlocked:            false,
+    sciConverters:          Array(7).fill(0),
+    sciAmounts:             Array(7).fill(0),
+    science:                0,
+    totalScienceEver:       0,
+    sciEra:                 0,
+    sciPaths:               {},
+    sciDiscoveries:         [],
+    sciWildcards:           {},
+    paradigmShiftCount:     0,
+    breakthroughs:          0,
+    totalBreakthroughsEarned: 0,
+    innovations:            0,
+    totalInnovationsEarned: 0,
+    purchasedInnovations:   [],
+    purchasedBreakthroughs: [],
   };
 }

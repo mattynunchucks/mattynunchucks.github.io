@@ -1,6 +1,7 @@
 import { ELEMENTS, ECHO_THRESHOLD } from "../data/elements";
 import { UPGRADES } from "../data/upgrades";
 import { CIV_ERAS, CIV_POLICIES, CIV_TIERS } from "../data/civilisation";
+import { SCI_PATHS, allScienceDiscoveries, INNOVATION_UPGRADES, BREAKTHROUGH_UPGRADES } from "../data/science";
 
 export function prestigeMultiplier(echoes) {
   return 1 + echoes * 0.1;
@@ -79,6 +80,79 @@ export function calcCivBonuses(eraChoices, purchasedPolicies, darkAgesCount, civ
   }
 
   return { civProdMult, civGlobalMult, extraMindBonus };
+}
+
+// ── Science bonuses ───────────────────────────────────────────────────────────
+// Returns multipliers/bonuses derived from purchased discoveries, path choices,
+// innovations, and breakthroughs. Used by tick.js and handler functions.
+export function calcScienceBonuses(sciDiscoveries, sciPaths, paradigmShiftCount, purchasedInnovations, purchasedBreakthroughs) {
+  let sciProdMult      = 1;          // multiplies tier-0 (Scholars) output
+  const sciTierMult    = Array(7).fill(1); // per-tier multipliers
+  let sciGlobal        = 1;          // global Science multiplier (all tiers)
+  let civGlobalBonus   = 1;          // bonus folded into civGlobalMult
+  let universeMindMult = 1;          // bonus to Mind production
+  let echoBonus        = 0;          // additive fraction added to echo gain
+  let echoMult         = 1;          // multiplicative echo gain
+  let relicBonus       = 0;          // flat relics added per Dark Age
+  let breakthroughMult = 1;          // multiplies Breakthroughs earned per Paradigm Shift
+  let discoveryCostMult = 1;         // multiplies discovery purchase costs
+  let extraWildcard    = 0;          // extra wildcards drawn per era
+  let paradigmReady    = false;      // Space Station purchased
+
+  const allDiscs = allScienceDiscoveries();
+  for (const disc of allDiscs) {
+    if (!(sciDiscoveries || []).includes(disc.id)) continue;
+    switch (disc.type) {
+      case "sciProd":         sciProdMult      *= disc.value; break;
+      case "sciGlobal":       sciGlobal        *= disc.value; break;
+      case "sciTierMult":     sciTierMult[disc.tier] *= disc.value; break;
+      case "civGlobal":       civGlobalBonus   *= disc.value; break;
+      case "universeMindMult":universeMindMult *= disc.value; break;
+      case "echoBonus":       echoBonus        += disc.value; break;
+      case "echoMult":        echoMult         *= disc.value; break;
+      case "relicBonus":      relicBonus       += disc.value; break;
+      case "breakthroughMult":breakthroughMult *= disc.value; break;
+      case "paradigmReady":   paradigmReady     = true;       break;
+    }
+  }
+
+  // Path effects
+  for (const [eraId, pathId] of Object.entries(sciPaths || {})) {
+    const path = (SCI_PATHS[eraId] || []).find(p => p.id === pathId);
+    if (!path) continue;
+    for (const eff of path.effects) {
+      if (eff.type === "sciGlobal")        sciGlobal        *= eff.mult;
+      if (eff.type === "sciTierMult")      sciTierMult[eff.tier] *= eff.mult;
+      if (eff.type === "civGlobalMult")    civGlobalBonus   *= eff.mult;
+      if (eff.type === "universeMindMult") universeMindMult *= eff.mult;
+      if (eff.type === "echoMult")         echoMult         *= eff.mult;
+      if (eff.type === "breakthroughMult") breakthroughMult *= eff.mult;
+      if (eff.type === "discoveryCostMult") discoveryCostMult *= eff.mult;
+      if (eff.type === "extraWildcard")    extraWildcard    += eff.value;
+      if (eff.type === "relicBonus")       relicBonus       += eff.value;
+    }
+  }
+
+  // Innovation effects
+  for (const id of (purchasedInnovations || [])) {
+    if (id === "theoretical_foundations") sciGlobal *= Math.pow(2, paradigmShiftCount || 0);
+    if (id === "scientific_legacy")       extraWildcard += 1;
+  }
+
+  // Breakthrough effects
+  for (const id of (purchasedBreakthroughs || [])) {
+    const bt = BREAKTHROUGH_UPGRADES.find(b => b.id === id);
+    if (!bt) continue;
+    if (bt.type === "echoBonus")    echoBonus    += bt.value;
+    if (bt.type === "echoMult")     echoMult     *= bt.value;
+    if (bt.type === "relicBonus")   relicBonus   += bt.value;
+    if (bt.type === "sciProd")      sciProdMult  *= bt.value;
+    if (bt.type === "sciShiftMult") sciGlobal    *= Math.pow(bt.value, paradigmShiftCount || 0);
+  }
+
+  return { sciProdMult, sciTierMult, sciGlobal, civGlobalBonus, universeMindMult,
+           echoBonus, echoMult, relicBonus, breakthroughMult, discoveryCostMult,
+           extraWildcard, paradigmReady };
 }
 
 export function calcCivMindBonus(totalCultureEver, eraChoices, purchasedPolicies, darkAgesCount, civArchive) {
