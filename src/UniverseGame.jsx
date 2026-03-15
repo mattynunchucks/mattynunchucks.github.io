@@ -131,15 +131,16 @@ export default function UniverseGame() {
         const parsed = parseSaveFile(saveData);
         // Only apply if cloud save is newer than the original localStorage save
         if ((parsed.lastTick || 0) <= localSaveTimeRef.current) return;
-        const s = { ...buildInitState(), ...parsed, lastTick: Date.now(), offlineSeconds: 0 };
         const offlineSecs = Math.min((Date.now() - (parsed.lastTick || Date.now())) / 1000, MAX_OFFLINE_SECS);
-        if (offlineSecs > 5) {
-          const after = applyTick(s, offlineSecs);
-          setState({ ...after, offlineSeconds: offlineSecs, log: [`⏱ Offline ${fmtTime(offlineSecs)} — resources accumulated`, ...after.log.slice(0, 49)] });
-        } else {
-          setState(s);
-        }
-        saveGame(s);
+        setState(() => {
+          const s = { ...buildInitState(), ...parsed, lastTick: Date.now(), offlineSeconds: 0 };
+          if (offlineSecs > 5) {
+            const after = applyTick(s, offlineSecs);
+            return { ...after, offlineSeconds: offlineSecs, log: [`⏱ Offline ${fmtTime(offlineSecs)} — resources accumulated`, ...after.log.slice(0, 49)] };
+          }
+          return s;
+        });
+        localSaveTimeRef.current = parsed.lastTick || 0;
       } catch {}
     }).catch(() => {});
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -599,9 +600,18 @@ export default function UniverseGame() {
       if (!saveData) { setLoadStatus({ ok: false, msg: "No save found for that token" }); return; }
       try {
         const parsed = parseSaveFile(saveData);
+        const offlineSecs = Math.min((Date.now() - (parsed.lastTick || Date.now())) / 1000, MAX_OFFLINE_SECS);
+        setState(() => {
+          const s = { ...buildInitState(), ...parsed, lastTick: Date.now(), offlineSeconds: 0 };
+          if (offlineSecs > 5) {
+            const after = applyTick(s, offlineSecs);
+            return { ...after, offlineSeconds: offlineSecs, log: [`⏱ Offline ${fmtTime(offlineSecs)} — resources accumulated`, ...after.log.slice(0, 49)] };
+          }
+          return s;
+        });
         setToken(token);
         setCloudToken(token);
-        applyParsed(parsed);
+        localSaveTimeRef.current = parsed.lastTick || 0;
         lastCloudSaveRef.current = Date.now();
         setCloudStatus("saved");
         setCloudLastSaved(new Date());
@@ -618,7 +628,18 @@ export default function UniverseGame() {
       if (!saveData) { setCloudStatus("idle"); setLoadStatus({ ok: false, msg: "No cloud save found" }); return; }
       try {
         const parsed = parseSaveFile(saveData);
-        applyParsed(parsed);
+        const offlineSecs = Math.min((Date.now() - (parsed.lastTick || Date.now())) / 1000, MAX_OFFLINE_SECS);
+        // Use functional setState so it always applies on top of the tick queue
+        setState(() => {
+          const s = { ...buildInitState(), ...parsed, lastTick: Date.now(), offlineSeconds: 0 };
+          if (offlineSecs > 5) {
+            const after = applyTick(s, offlineSecs);
+            return { ...after, offlineSeconds: offlineSecs, log: [`⏱ Offline ${fmtTime(offlineSecs)} — resources accumulated`, ...after.log.slice(0, 49)] };
+          }
+          return s;
+        });
+        localSaveTimeRef.current = parsed.lastTick || 0;
+        lastCloudSaveRef.current = Date.now();
         setCloudStatus("saved");
         setCloudLastSaved(new Date());
         setLoadStatus({ ok: true, msg: "Cloud save loaded" });
@@ -627,7 +648,7 @@ export default function UniverseGame() {
         setLoadStatus({ ok: false, msg: `Load failed: ${err.message}` });
       }
     }).catch(() => { setCloudStatus("error"); setLoadStatus({ ok: false, msg: "Could not reach save server" }); });
-  }, [applyParsed, cloudToken]);
+  }, [cloudToken]);
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
