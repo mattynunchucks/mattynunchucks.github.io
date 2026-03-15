@@ -18,12 +18,12 @@ export function setToken(token) {
   localStorage.setItem(TOKEN_KEY, token.trim());
 }
 
-export async function cloudPush(saveString) {
+export async function cloudPush(saveString, score = 0) {
   const token = getOrCreateToken();
   const res = await fetch(API_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ token, save_data: saveString }),
+    body: JSON.stringify({ token, save_data: saveString, score }),
   });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return true;

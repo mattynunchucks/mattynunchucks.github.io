@@ -103,7 +103,7 @@ export default function UniverseGame() {
       if (now - lastCloudSaveRef.current > 60 * 1000) {
         lastCloudSaveRef.current = now;
         setCloudStatus("syncing");
-        cloudPush(exportSaveFile(stateRef.current))
+        cloudPush(exportSaveFile(stateRef.current), saveScore(stateRef.current))
           .then(() => { setCloudStatus("saved"); setCloudLastSaved(new Date()); })
           .catch(() => setCloudStatus("error"));
       }
@@ -117,10 +117,10 @@ export default function UniverseGame() {
       const saveStr = exportSaveFile(stateRef.current);
       navigator.sendBeacon
         ? navigator.sendBeacon("/cosmogenesis/api/save.php", new Blob(
-            [JSON.stringify({ token: getToken(), save_data: saveStr })],
+            [JSON.stringify({ token: getToken(), save_data: saveStr, score: saveScore(stateRef.current) })],
             { type: "application/json" }
           ))
-        : cloudPush(saveStr).catch(() => {});
+        : cloudPush(saveStr, saveScore(stateRef.current)).catch(() => {});
     };
     window.addEventListener("beforeunload", handleUnload);
     return () => window.removeEventListener("beforeunload", handleUnload);
@@ -581,7 +581,7 @@ export default function UniverseGame() {
 
   const cloudSyncNow = useCallback(() => {
     setCloudStatus("syncing");
-    cloudPush(exportSaveFile(stateRef.current))
+    cloudPush(exportSaveFile(stateRef.current), saveScore(stateRef.current))
       .then(() => { setCloudStatus("saved"); setCloudLastSaved(new Date()); lastCloudSaveRef.current = Date.now(); })
       .catch(() => setCloudStatus("error"));
   }, []);

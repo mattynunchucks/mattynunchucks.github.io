@@ -54,13 +54,17 @@ if ($method === 'POST') {
         exit;
     }
 
+    $score = isset($body['score']) ? intval($body['score']) : 0;
+
     $stmt = $pdo->prepare('
-        INSERT INTO saves (token, save_data)
-        VALUES (?, ?)
-        ON DUPLICATE KEY UPDATE save_data = VALUES(save_data)
+        INSERT INTO saves (token, save_data, score)
+        VALUES (?, ?, ?)
+        ON DUPLICATE KEY UPDATE
+            save_data = IF(VALUES(score) >= score, VALUES(save_data), save_data),
+            score     = IF(VALUES(score) >= score, VALUES(score),     score)
     ');
-    $stmt->execute([$token, $save_data]);
-    echo json_encode(['ok' => true]);
+    $stmt->execute([$token, $save_data, $score]);
+    echo json_encode(['ok' => true, 'stored' => true]);
     exit;
 }
 
