@@ -645,7 +645,7 @@ export default function UniverseGame() {
         setCloudLastSaved(new Date());
         const da = s.darkAgesCount || 0;
         const pc = s.prestigeCount || 0;
-        setLoadStatus({ ok: true, msg: `Cloud save loaded (${da} dark ages, ${pc} prestiges)` });
+        setLoadStatus({ ok: true, msg: `Cloud save loaded (${da} dark ages, ${pc} prestiges) [token: ${cloudToken.slice(0, 8)}]` });
       } catch (err) {
         setCloudStatus("error");
         setLoadStatus({ ok: false, msg: `Load failed: ${err.message}` });
