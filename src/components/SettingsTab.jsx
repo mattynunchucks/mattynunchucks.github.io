@@ -8,7 +8,7 @@ export default function SettingsTab({
   autopilot, setAutopilot, autopilotRunning, autopilotResults, autopilotProgress,
   simClickRate, setSimClickRate,
   loadStatus, onShowDeleteConfirm,
-  cloudStatus, cloudLastSaved, cloudToken, onCloudSyncNow, onLinkToken,
+  cloudStatus, cloudLastSaved, cloudToken, onCloudSyncNow, onCloudLoadNow, onLinkToken,
 }) {
   const [linkInput, setLinkInput] = useState("");
   const [copied, setCopied] = useState(false);
@@ -141,10 +141,16 @@ export default function SettingsTab({
               {cloudStatus === "error"   && "✗ SYNC FAILED"}
               {cloudStatus === "idle"    && "AUTO-SYNCS EVERY 5 MINUTES"}
             </div>
-            <button onClick={onCloudSyncNow} disabled={cloudStatus === "syncing"}
-              style={{ background: "transparent", border: "1px solid #2a3a50", borderRadius: "4px", color: "#4a5a70", padding: "3px 10px", cursor: "pointer", fontSize: "0.52rem", fontFamily: "'Courier New', monospace" }}>
-              SYNC NOW
-            </button>
+            <div style={{ display: "flex", gap: "6px" }}>
+              <button onClick={onCloudLoadNow} disabled={cloudStatus === "syncing"}
+                style={{ background: "transparent", border: "1px solid #2a3a50", borderRadius: "4px", color: "#4a5a70", padding: "3px 10px", cursor: "pointer", fontSize: "0.52rem", fontFamily: "'Courier New', monospace" }}>
+                LOAD
+              </button>
+              <button onClick={onCloudSyncNow} disabled={cloudStatus === "syncing"}
+                style={{ background: "transparent", border: "1px solid #2a3a50", borderRadius: "4px", color: "#4a5a70", padding: "3px 10px", cursor: "pointer", fontSize: "0.52rem", fontFamily: "'Courier New', monospace" }}>
+                SAVE
+              </button>
+            </div>
           </div>
 
           {/* Token display */}

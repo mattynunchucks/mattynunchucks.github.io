@@ -50,9 +50,12 @@ function buildTheme(darkMode) {
 // ─── Component ──────────────────────────────────────────────────────────────
 
 export default function UniverseGame() {
+  const localSaveTimeRef = useRef(0);
+
   const [state, setState] = useState(() => {
     const saved = loadGame();
     if (!saved) return buildInitState();
+    localSaveTimeRef.current = saved.lastTick || 0;
     const s = { ...buildInitState(), ...saved, lastTick: Date.now() };
     const offlineSecs = Math.min((Date.now() - (saved.lastTick || Date.now())) / 1000, MAX_OFFLINE_SECS);
     if (offlineSecs > 5) {
@@ -111,8 +114,8 @@ export default function UniverseGame() {
       if (!saveData) return;
       try {
         const parsed = parseSaveFile(saveData);
-        // Only apply if cloud save is newer than what's already loaded
-        if ((parsed.lastTick || 0) <= (stateRef.current.lastTick || 0)) return;
+        // Only apply if cloud save is newer than the original localStorage save
+        if ((parsed.lastTick || 0) <= localSaveTimeRef.current) return;
         const s = { ...buildInitState(), ...parsed, lastTick: Date.now(), offlineSeconds: 0 };
         const offlineSecs = Math.min((Date.now() - (parsed.lastTick || Date.now())) / 1000, MAX_OFFLINE_SECS);
         if (offlineSecs > 5) {
@@ -594,6 +597,22 @@ export default function UniverseGame() {
     }).catch(() => setLoadStatus({ ok: false, msg: "Could not reach save server" }));
   }, [applyParsed]);
 
+  const cloudLoadNow = useCallback(() => {
+    setCloudStatus("syncing");
+    cloudPull(cloudToken).then(saveData => {
+      if (!saveData) { setCloudStatus("idle"); setLoadStatus({ ok: false, msg: "No cloud save found" }); return; }
+      try {
+        const parsed = parseSaveFile(saveData);
+        applyParsed(parsed);
+        setCloudStatus("saved");
+        setCloudLastSaved(new Date());
+        setLoadStatus({ ok: true, msg: "Cloud save loaded" });
+      } catch (err) {
+        setCloudStatus("error");
+        setLoadStatus({ ok: false, msg: `Load failed: ${err.message}` });
+      }
+    }).catch(() => { setCloudStatus("error"); setLoadStatus({ ok: false, msg: "Could not reach save server" }); });
+  }, [applyParsed, cloudToken]);
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
@@ -844,7 +863,7 @@ export default function UniverseGame() {
             onShowDeleteConfirm={() => setShowDeleteConfirm(true)}
             cloudStatus={cloudStatus} cloudLastSaved={cloudLastSaved}
             cloudToken={cloudToken} onCloudSyncNow={cloudSyncNow}
-            onLinkToken={handleLinkToken}
+            onCloudLoadNow={cloudLoadNow} onLinkToken={handleLinkToken}
           />
         )}
 
