@@ -95,7 +95,7 @@ export default function UniverseGame() {
     const id = setInterval(() => {
       saveGame(stateRef.current);
       const now = Date.now();
-      if (now - lastCloudSaveRef.current > 5 * 60 * 1000) {
+      if (now - lastCloudSaveRef.current > 60 * 1000) {
         lastCloudSaveRef.current = now;
         setCloudStatus("syncing");
         cloudPush(exportSaveFile(stateRef.current))
@@ -104,6 +104,21 @@ export default function UniverseGame() {
       }
     }, 5000);
     return () => clearInterval(id);
+  }, []);
+
+  // ── Cloud save: push on page close ────────────────────────────────────────
+  useEffect(() => {
+    const handleUnload = () => {
+      const saveStr = exportSaveFile(stateRef.current);
+      navigator.sendBeacon
+        ? navigator.sendBeacon("/cosmogenesis/api/save.php", new Blob(
+            [JSON.stringify({ token: getToken(), save_data: saveStr })],
+            { type: "application/json" }
+          ))
+        : cloudPush(saveStr).catch(() => {});
+    };
+    window.addEventListener("beforeunload", handleUnload);
+    return () => window.removeEventListener("beforeunload", handleUnload);
   }, []);
 
   // ── Cloud save: startup load ───────────────────────────────────────────────
