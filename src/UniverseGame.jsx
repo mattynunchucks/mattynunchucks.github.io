@@ -218,6 +218,7 @@ export default function UniverseGame() {
       const hasCascade       = relicUpgrades.includes("relic_cascade");
       const hasFoundations   = relicUpgrades.includes("ancient_foundations");
       const hasDarkWisdom    = relicUpgrades.includes("dark_wisdom");
+      const hasLivingHistory = relicUpgrades.includes("living_history");
       const keepPolicies     = hasMemory;
       const sb               = calcScienceBonuses(s.sciDiscoveries, s.sciPaths, s.paradigmShiftCount, s.purchasedInnovations, s.purchasedBreakthroughs);
       const sciRelicBonus    = Math.floor(sb.relicBonus || 0);
@@ -237,8 +238,8 @@ export default function UniverseGame() {
         civConverters:     s.civConverters.map((_, i) => i === 0 ? startTribes : 0),
         culture:           0,
         totalCultureEver:  0,
-        firedEras:         [],
-        eraChoices:        {},
+        firedEras:         hasLivingHistory ? (s.firedEras || []) : [],
+        eraChoices:        hasLivingHistory ? (s.eraChoices || {}) : {},
         purchasedPolicies: keepPolicies ? (s.purchasedPolicies || []) : [],
         purchasedUpgrades: keptUpgrades,
         pendingEra:        null,
@@ -246,7 +247,7 @@ export default function UniverseGame() {
         darkAgesCount:     count,
         relics:            (s.relics || 0) + relicGain,
         totalRelicsEarned: (s.totalRelicsEarned || 0) + relicGain,
-        log: [`🌑 Dark Ages #${count} — +${relicGain} Relic${relicGain > 1 ? "s" : ""}, ×${Math.pow(darkBase, count).toFixed(2)} culture bonus${keepPolicies ? " (policies kept)" : ""}`, ...s.log.slice(0, 49)],
+        log: [`🌑 Dark Ages #${count} — +${relicGain} Relic${relicGain > 1 ? "s" : ""}, ×${Math.pow(darkBase, count).toFixed(2)} culture bonus${keepPolicies ? " (policies kept)" : ""}${hasLivingHistory ? " (eras kept)" : ""}`, ...s.log.slice(0, 49)],
       };
     });
   }, []);

@@ -22,6 +22,13 @@ export const RELIC_UPGRADES = [
     echoCost: 50,
   },
   {
+    id:   "living_history",
+    name: "Living History",
+    icon: "🏺",
+    desc: "Era choices are preserved through Dark Ages — completed eras never re-fire",
+    cost: 10,
+  },
+  {
     id:   "dark_wisdom",
     name: "Dark Wisdom",
     icon: "🌑",
