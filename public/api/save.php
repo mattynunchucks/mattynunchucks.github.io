@@ -19,6 +19,8 @@ $method = $_SERVER['REQUEST_METHOD'];
 
 // ── GET: load save ────────────────────────────────────────────────────────────
 if ($method === 'GET') {
+    header('Cache-Control: no-store, no-cache, must-revalidate');
+    header('Pragma: no-cache');
     $token = $_GET['token'] ?? '';
     if (!validToken($token)) {
         http_response_code(400);
