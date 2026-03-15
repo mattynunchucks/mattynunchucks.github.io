@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { CIV_UNLOCK_MINDS, CIV_ERAS } from "../data/civilisation";
 import { ECHO_THRESHOLD } from "../data/elements";
 import { fmt, fmtTime } from "../utils/format";
@@ -8,7 +9,17 @@ export default function SettingsTab({
   simClickRate, setSimClickRate,
   handleExportSave, loadStatus,
   onShowLoadModal, onShowDeleteConfirm,
+  cloudStatus, cloudLastSaved, cloudToken, onCloudSyncNow, onLinkToken,
 }) {
+  const [linkInput, setLinkInput] = useState("");
+  const [copied, setCopied] = useState(false);
+
+  function copyToken() {
+    navigator.clipboard.writeText(cloudToken).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
   return (
     <div style={{ maxWidth: "400px", margin: "0 auto" }}>
       <div style={{ fontSize: "0.65rem", color: theme.textDim, letterSpacing: "0.18em", marginBottom: "16px" }}>⚙ SETTINGS</div>
@@ -115,6 +126,56 @@ export default function SettingsTab({
               )}
             </>
           )}
+        </div>
+      </div>
+
+      {/* Cloud Save */}
+      <div style={{ marginBottom: "20px" }}>
+        <div style={{ fontSize: "0.65rem", color: theme.textDim, letterSpacing: "0.18em", marginBottom: "10px" }}>☁ CLOUD SAVE</div>
+        <div style={{ background: "#080c18", border: "1px solid #1a2a40", borderRadius: "6px", padding: "12px 14px", display: "flex", flexDirection: "column", gap: "10px" }}>
+
+          {/* Status row */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div style={{ fontSize: "0.55rem", color: cloudStatus === "saved" ? "#6bcb77" : cloudStatus === "error" ? "#ff6b6b" : cloudStatus === "syncing" ? "#4d96ff" : theme.textFaint, letterSpacing: "0.1em" }}>
+              {cloudStatus === "syncing" && "⟳ SYNCING..."}
+              {cloudStatus === "saved"   && `✓ SYNCED${cloudLastSaved ? ` · ${cloudLastSaved.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}` : ""}`}
+              {cloudStatus === "error"   && "✗ SYNC FAILED"}
+              {cloudStatus === "idle"    && "AUTO-SYNCS EVERY 5 MINUTES"}
+            </div>
+            <button onClick={onCloudSyncNow} disabled={cloudStatus === "syncing"}
+              style={{ background: "transparent", border: "1px solid #2a3a50", borderRadius: "4px", color: "#4a5a70", padding: "3px 10px", cursor: "pointer", fontSize: "0.52rem", fontFamily: "'Courier New', monospace" }}>
+              SYNC NOW
+            </button>
+          </div>
+
+          {/* Token display */}
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <div style={{ flex: 1, fontSize: "0.48rem", color: theme.textFaint, fontFamily: "'Courier New', monospace", background: "#050810", border: "1px solid #1a2a40", borderRadius: "4px", padding: "5px 8px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {cloudToken || "—"}
+            </div>
+            <button onClick={copyToken}
+              style={{ background: copied ? "#6bcb7722" : "transparent", border: `1px solid ${copied ? "#6bcb77" : "#2a3a50"}`, borderRadius: "4px", color: copied ? "#6bcb77" : "#4a5a70", padding: "4px 10px", cursor: "pointer", fontSize: "0.5rem", fontFamily: "'Courier New', monospace", whiteSpace: "nowrap" }}>
+              {copied ? "COPIED" : "COPY"}
+            </button>
+          </div>
+          <div style={{ fontSize: "0.48rem", color: theme.textFaint, lineHeight: 1.5 }}>
+            Save this token to restore your progress on another device.
+          </div>
+
+          {/* Link another device */}
+          <div style={{ borderTop: "1px solid #1a2a40", paddingTop: "10px", display: "flex", gap: "6px" }}>
+            <input
+              value={linkInput} onChange={e => setLinkInput(e.target.value)}
+              placeholder="Paste token to link another device…"
+              style={{ flex: 1, background: "#050810", border: "1px solid #1a2a40", borderRadius: "4px", color: theme.text, padding: "5px 8px", fontSize: "0.5rem", fontFamily: "'Courier New', monospace", outline: "none" }}
+            />
+            <button
+              onClick={() => { if (linkInput.trim()) { onLinkToken(linkInput.trim()); setLinkInput(""); } }}
+              disabled={!linkInput.trim()}
+              style={{ background: "transparent", border: "1px solid #2a3a50", borderRadius: "4px", color: "#4a5a70", padding: "4px 10px", cursor: "pointer", fontSize: "0.5rem", fontFamily: "'Courier New', monospace" }}>
+              LINK
+            </button>
+          </div>
         </div>
       </div>
 
