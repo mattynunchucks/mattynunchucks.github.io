@@ -49,6 +49,14 @@ function buildTheme(darkMode) {
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
+// Higher = more progress. Used to pick the better save when cloud and local diverge.
+function saveScore(s) {
+  return (s.darkAgesCount    || 0) * 1e9 +
+         (s.totalRelicsEarned || 0) * 1e6 +
+         (s.prestigeCount     || 0) * 1e4 +
+         Math.min(s.totalEchoesEarned || 0, 9999);
+}
+
 export default function UniverseGame() {
   const [state, setState] = useState(() => {
     const saved = loadGame();
@@ -126,6 +134,8 @@ export default function UniverseGame() {
       if (!saveData) return;
       try {
         const parsed = parseSaveFile(saveData);
+        // Only apply cloud save if it has more progress than the local save
+        if (saveScore(parsed) <= saveScore(stateRef.current)) return;
         const offlineSecs = Math.min((Date.now() - (parsed.lastTick || Date.now())) / 1000, MAX_OFFLINE_SECS);
         setState(() => {
           const s = { ...buildInitState(), ...parsed, lastTick: Date.now(), offlineSeconds: 0 };
