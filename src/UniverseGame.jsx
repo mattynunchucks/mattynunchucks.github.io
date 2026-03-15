@@ -542,11 +542,40 @@ export default function UniverseGame() {
     lastCloudSaveRef.current = 0; // force cloud sync on next 5s tick
   }, []);
 
+  const handleExportSave = useCallback(() => {
+    try {
+      const text = exportSaveFile(stateRef.current);
+      if (!text) throw new Error("Export produced empty result");
+      setSaveModal(text);
+    } catch (err) {
+      setLoadStatus({ ok: false, msg: `Save failed: ${err.message}` });
+    }
+  }, []);
+
+  const handleDeleteSave = useCallback(() => {
+    try { localStorage.removeItem("cosmo_universe_save"); } catch {}
+    setState(buildInitState());
+    setShowDeleteConfirm(false);
+    setTab("game");
+  }, []);
+
   const cloudSyncNow = useCallback(() => {
     setCloudStatus("syncing");
     cloudPush(exportSaveFile(stateRef.current))
       .then(() => { setCloudStatus("saved"); setCloudLastSaved(new Date()); lastCloudSaveRef.current = Date.now(); })
       .catch(() => setCloudStatus("error"));
+  }, []);
+
+  const applyParsed = useCallback((parsed) => {
+    const s = { ...buildInitState(), ...parsed, lastTick: Date.now(), offlineSeconds: 0 };
+    const offlineSecs = Math.min((Date.now() - (parsed.lastTick || Date.now())) / 1000, MAX_OFFLINE_SECS);
+    if (offlineSecs > 5) {
+      const after = applyTick(s, offlineSecs);
+      setState({ ...after, offlineSeconds: offlineSecs, log: [`⏱ Offline ${fmtTime(offlineSecs)} — resources accumulated`, ...after.log.slice(0, 49)] });
+    } else {
+      setState(s);
+    }
+    saveGame(s);
   }, []);
 
   const handleLinkToken = useCallback((token) => {
@@ -566,35 +595,6 @@ export default function UniverseGame() {
       }
     }).catch(() => setLoadStatus({ ok: false, msg: "Could not reach save server" }));
   }, [applyParsed]);
-
-  const handleExportSave = useCallback(() => {
-    try {
-      const text = exportSaveFile(stateRef.current);
-      if (!text) throw new Error("Export produced empty result");
-      setSaveModal(text);
-    } catch (err) {
-      setLoadStatus({ ok: false, msg: `Save failed: ${err.message}` });
-    }
-  }, []);
-
-  const handleDeleteSave = useCallback(() => {
-    try { localStorage.removeItem("cosmo_universe_save"); } catch {}
-    setState(buildInitState());
-    setShowDeleteConfirm(false);
-    setTab("game");
-  }, []);
-
-  const applyParsed = useCallback((parsed) => {
-    const s = { ...buildInitState(), ...parsed, lastTick: Date.now(), offlineSeconds: 0 };
-    const offlineSecs = Math.min((Date.now() - (parsed.lastTick || Date.now())) / 1000, MAX_OFFLINE_SECS);
-    if (offlineSecs > 5) {
-      const after = applyTick(s, offlineSecs);
-      setState({ ...after, offlineSeconds: offlineSecs, log: [`⏱ Offline ${fmtTime(offlineSecs)} — resources accumulated`, ...after.log.slice(0, 49)] });
-    } else {
-      setState(s);
-    }
-    saveGame(s);
-  }, []);
 
   const handleImportSave = useCallback((e) => {
     const file = e.target.files?.[0];
