@@ -50,12 +50,9 @@ function buildTheme(darkMode) {
 // ─── Component ──────────────────────────────────────────────────────────────
 
 export default function UniverseGame() {
-  const localSaveTimeRef = useRef(0);
-
   const [state, setState] = useState(() => {
     const saved = loadGame();
     if (!saved) return buildInitState();
-    localSaveTimeRef.current = saved.lastTick || 0;
     const s = { ...buildInitState(), ...saved, lastTick: Date.now() };
     const offlineSecs = Math.min((Date.now() - (saved.lastTick || Date.now())) / 1000, MAX_OFFLINE_SECS);
     if (offlineSecs > 5) {
@@ -129,8 +126,6 @@ export default function UniverseGame() {
       if (!saveData) return;
       try {
         const parsed = parseSaveFile(saveData);
-        // Only apply if cloud save is newer than the original localStorage save
-        if ((parsed.lastTick || 0) <= localSaveTimeRef.current) return;
         const offlineSecs = Math.min((Date.now() - (parsed.lastTick || Date.now())) / 1000, MAX_OFFLINE_SECS);
         setState(() => {
           const s = { ...buildInitState(), ...parsed, lastTick: Date.now(), offlineSeconds: 0 };
@@ -140,7 +135,6 @@ export default function UniverseGame() {
           }
           return s;
         });
-        localSaveTimeRef.current = parsed.lastTick || 0;
       } catch {}
     }).catch(() => {});
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -217,7 +211,6 @@ export default function UniverseGame() {
       const keepPolicies     = hasMemory;
       const sb               = calcScienceBonuses(s.sciDiscoveries, s.sciPaths, s.paradigmShiftCount, s.purchasedInnovations, s.purchasedBreakthroughs);
       const sciRelicBonus    = Math.floor(sb.relicBonus || 0);
-      const hasDivParadigm   = (s.purchasedInnovations || []).includes("paradigm_dividend");
       const relicGain        = 1 + (hasCascade ? Math.floor((s.darkAgesCount || 0) / 5) : 0) + sciRelicBonus;
       const darkBase         = hasDarkWisdom ? 1.1 : 1.05;
       const startTribes      = hasFoundations ? 100 : 0;
@@ -611,7 +604,6 @@ export default function UniverseGame() {
         });
         setToken(token);
         setCloudToken(token);
-        localSaveTimeRef.current = parsed.lastTick || 0;
         lastCloudSaveRef.current = Date.now();
         setCloudStatus("saved");
         setCloudLastSaved(new Date());
@@ -638,7 +630,6 @@ export default function UniverseGame() {
           }
           return s;
         });
-        localSaveTimeRef.current = parsed.lastTick || 0;
         lastCloudSaveRef.current = Date.now();
         setCloudStatus("saved");
         setCloudLastSaved(new Date());
