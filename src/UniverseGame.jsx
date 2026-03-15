@@ -631,19 +631,21 @@ export default function UniverseGame() {
       try {
         const parsed = parseSaveFile(saveData);
         const offlineSecs = Math.min((Date.now() - (parsed.lastTick || Date.now())) / 1000, MAX_OFFLINE_SECS);
-        // Use functional setState so it always applies on top of the tick queue
-        setState(() => {
-          const s = { ...buildInitState(), ...parsed, lastTick: Date.now(), offlineSeconds: 0 };
-          if (offlineSecs > 5) {
-            const after = applyTick(s, offlineSecs);
-            return { ...after, offlineSeconds: offlineSecs, log: [`⏱ Offline ${fmtTime(offlineSecs)} — resources accumulated`, ...after.log.slice(0, 49)] };
-          }
-          return s;
-        });
+        let s = { ...buildInitState(), ...parsed, lastTick: Date.now(), offlineSeconds: 0 };
+        if (offlineSecs > 5) {
+          const after = applyTick(s, offlineSecs);
+          s = { ...after, offlineSeconds: offlineSecs, log: [`⏱ Offline ${fmtTime(offlineSecs)} — resources accumulated`, ...after.log.slice(0, 49)] };
+        }
+        // Persist immediately so localStorage is never stale after a load
+        saveGame(s);
+        stateRef.current = s;
+        setState(() => s);
         lastCloudSaveRef.current = Date.now();
         setCloudStatus("saved");
         setCloudLastSaved(new Date());
-        setLoadStatus({ ok: true, msg: "Cloud save loaded" });
+        const da = s.darkAgesCount || 0;
+        const pc = s.prestigeCount || 0;
+        setLoadStatus({ ok: true, msg: `Cloud save loaded (${da} dark ages, ${pc} prestiges)` });
       } catch (err) {
         setCloudStatus("error");
         setLoadStatus({ ok: false, msg: `Load failed: ${err.message}` });
