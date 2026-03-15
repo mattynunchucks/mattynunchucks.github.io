@@ -7,7 +7,7 @@ import { RELIC_UPGRADES } from "./data/relicUpgrades";
 
 import { fmt, fmtTime } from "./utils/format";
 import { saveGame, loadGame, exportSaveFile, parseSaveFile } from "./utils/save";
-import { cloudPush, cloudPull, getOrCreateToken, getToken, setToken } from "./game/cloudSave";
+import { cloudPush, cloudPull, cloudDelete, getOrCreateToken, getToken, setToken } from "./game/cloudSave";
 
 import { calcStats, prestigeMultiplier, calcEchoesFromRun, calcScienceBonuses } from "./game/stats";
 import { converterCost, maxConverters, civConverterCost, civMaxConverters } from "./game/converters";
@@ -23,7 +23,7 @@ import PrestigeTab      from "./components/PrestigeTab";
 import CivilisationTab  from "./components/CivilisationTab";
 import ScienceTab       from "./components/ScienceTab";
 import SettingsTab      from "./components/SettingsTab";
-import { SaveModal, LoadModal, DeleteConfirmModal } from "./components/Modals";
+import { DeleteConfirmModal } from "./components/Modals";
 
 // ─── Theme ──────────────────────────────────────────────────────────────────
 
@@ -68,12 +68,8 @@ export default function UniverseGame() {
   const [darkMode,            setDarkMode]            = useState(true);
   const [showPurchased,       setShowPurchased]       = useState(false);
   const [showPrestigeConfirm, setShowPrestigeConfirm] = useState(false);
-  const [saveModal,           setSaveModal]           = useState(null);
   const [showDeleteConfirm,   setShowDeleteConfirm]   = useState(false);
   const [loadStatus,          setLoadStatus]          = useState(null);
-  const [showLoadModal,       setShowLoadModal]       = useState(false);
-  const [pasteText,           setPasteText]           = useState("");
-  const [pasteError,          setPasteError]          = useState("");
   const [simClickRate,        setSimClickRate]        = useState(2);
   const [cloudStatus,         setCloudStatus]         = useState("idle"); // idle | syncing | saved | error
   const [cloudLastSaved,      setCloudLastSaved]      = useState(null);
@@ -542,22 +538,24 @@ export default function UniverseGame() {
     lastCloudSaveRef.current = 0; // force cloud sync on next 5s tick
   }, []);
 
-  const handleExportSave = useCallback(() => {
-    try {
-      const text = exportSaveFile(stateRef.current);
-      if (!text) throw new Error("Export produced empty result");
-      setSaveModal(text);
-    } catch (err) {
-      setLoadStatus({ ok: false, msg: `Save failed: ${err.message}` });
-    }
-  }, []);
-
-  const handleDeleteSave = useCallback(() => {
-    try { localStorage.removeItem("cosmo_universe_save"); } catch {}
-    setState(buildInitState());
-    setShowDeleteConfirm(false);
-    setTab("game");
-  }, []);
+  const handleDeleteCloudSave = useCallback(() => {
+    cloudDelete(cloudToken)
+      .then(() => {
+        try { localStorage.removeItem("cosmo_universe_save"); } catch {}
+        setState(buildInitState());
+        const newToken = getOrCreateToken();
+        setCloudToken(newToken);
+        setCloudStatus("idle");
+        setCloudLastSaved(null);
+        lastCloudSaveRef.current = 0;
+        setShowDeleteConfirm(false);
+        setTab("game");
+      })
+      .catch(() => {
+        setLoadStatus({ ok: false, msg: "Could not delete cloud save" });
+        setShowDeleteConfirm(false);
+      });
+  }, [cloudToken]);
 
   const cloudSyncNow = useCallback(() => {
     setCloudStatus("syncing");
@@ -596,35 +594,6 @@ export default function UniverseGame() {
     }).catch(() => setLoadStatus({ ok: false, msg: "Could not reach save server" }));
   }, [applyParsed]);
 
-  const handleImportSave = useCallback((e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      try {
-        const parsed = parseSaveFile(ev.target?.result);
-        applyParsed(parsed);
-        setLoadStatus({ ok: true, msg: "Save loaded successfully" });
-      } catch (err) {
-        setLoadStatus({ ok: false, msg: `Load failed: ${err.message}` });
-      }
-    };
-    reader.readAsText(file);
-    e.target.value = "";
-  }, [applyParsed]);
-
-  const handlePasteLoad = useCallback(() => {
-    try {
-      const parsed = parseSaveFile(pasteText);
-      applyParsed(parsed);
-      setShowLoadModal(false);
-      setPasteText("");
-      setPasteError("");
-      setLoadStatus({ ok: true, msg: "Save loaded successfully" });
-    } catch (err) {
-      setPasteError(`Invalid save: ${err.message}`);
-    }
-  }, [pasteText, applyParsed]);
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
@@ -871,8 +840,7 @@ export default function UniverseGame() {
             autopilotRunning={autopilotRunning} autopilotResults={autopilotResults}
             autopilotProgress={autopilotProgress}
             simClickRate={simClickRate} setSimClickRate={setSimClickRate}
-            handleExportSave={handleExportSave} loadStatus={loadStatus}
-            onShowLoadModal={() => { setShowLoadModal(true); setPasteText(""); setPasteError(""); }}
+            loadStatus={loadStatus}
             onShowDeleteConfirm={() => setShowDeleteConfirm(true)}
             cloudStatus={cloudStatus} cloudLastSaved={cloudLastSaved}
             cloudToken={cloudToken} onCloudSyncNow={cloudSyncNow}
@@ -886,18 +854,9 @@ export default function UniverseGame() {
       </div>
 
       {/* Modals */}
-      <SaveModal saveModal={saveModal} setSaveModal={setSaveModal} />
-      <LoadModal
-        show={showLoadModal} theme={theme}
-        pasteText={pasteText} setPasteText={setPasteText}
-        pasteError={pasteError} setPasteError={setPasteError}
-        onPasteLoad={handlePasteLoad}
-        onImportFile={handleImportSave}
-        onClose={() => setShowLoadModal(false)}
-      />
       <DeleteConfirmModal
         show={showDeleteConfirm} theme={theme}
-        onConfirm={handleDeleteSave}
+        onConfirm={handleDeleteCloudSave}
         onCancel={() => setShowDeleteConfirm(false)}
       />
 

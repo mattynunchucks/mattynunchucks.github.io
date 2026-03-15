@@ -29,6 +29,19 @@ export async function cloudPush(saveString) {
   return true;
 }
 
+export async function cloudDelete(token) {
+  const t = token || getToken();
+  if (!t) return true;
+  const res = await fetch(API_URL, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token: t }),
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  localStorage.removeItem(TOKEN_KEY);
+  return true;
+}
+
 export async function cloudPull(token) {
   const t = token || getToken();
   if (!t) return null;

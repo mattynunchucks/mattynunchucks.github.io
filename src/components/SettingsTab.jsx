@@ -7,8 +7,7 @@ export default function SettingsTab({
   theme, darkMode, setDarkMode, fontScale, setFontScale,
   autopilot, setAutopilot, autopilotRunning, autopilotResults, autopilotProgress,
   simClickRate, setSimClickRate,
-  handleExportSave, loadStatus,
-  onShowLoadModal, onShowDeleteConfirm,
+  loadStatus, onShowDeleteConfirm,
   cloudStatus, cloudLastSaved, cloudToken, onCloudSyncNow, onLinkToken,
 }) {
   const [linkInput, setLinkInput] = useState("");
@@ -179,27 +178,17 @@ export default function SettingsTab({
         </div>
       </div>
 
-      {/* Save/Load/Delete */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-        <button onClick={handleExportSave} style={{ background: "#0a1a10", border: "1px solid #6bcb7788", borderRadius: "6px", color: "#6bcb77", padding: "12px 20px", cursor: "pointer", fontSize: "0.65rem", letterSpacing: "0.14em", fontFamily: "'Courier New', monospace", textAlign: "left" }}>
-          <div>💾 SAVE FILE</div>
-          <div style={{ fontSize: "0.52rem", color: "#6bcb7788", marginTop: "3px" }}>Export your save to a text file</div>
-        </button>
-        <button onClick={onShowLoadModal} style={{ background: "#0a1020", border: "1px solid #4d96ff88", borderRadius: "6px", color: "#4d96ff", padding: "12px 20px", cursor: "pointer", fontSize: "0.65rem", letterSpacing: "0.14em", fontFamily: "'Courier New', monospace", textAlign: "left" }}>
-          <div>📂 LOAD FILE</div>
-          <div style={{ fontSize: "0.52rem", color: "#4d96ff88", marginTop: "3px" }}>Load from a file or paste save text</div>
-        </button>
+      {/* Danger zone */}
+      <div style={{ borderTop: "1px solid #1a2a40", paddingTop: "16px" }}>
         {loadStatus && (
-          <div style={{ fontSize: "0.57rem", color: loadStatus.ok ? "#6bcb77" : "#ff6b6b", letterSpacing: "0.08em", textAlign: "center", padding: "4px" }}>
+          <div style={{ fontSize: "0.57rem", color: loadStatus.ok ? "#6bcb77" : "#ff6b6b", letterSpacing: "0.08em", textAlign: "center", padding: "4px 0 10px" }}>
             {loadStatus.ok ? "✓" : "✗"} {loadStatus.msg}
           </div>
         )}
-        <div style={{ borderTop: "1px solid #1a2a40", marginTop: "8px", paddingTop: "8px" }}>
-          <button onClick={onShowDeleteConfirm} style={{ width: "100%", background: "#1a0808", border: "1px solid #ff6b6b88", borderRadius: "6px", color: "#ff6b6b", padding: "12px 20px", cursor: "pointer", fontSize: "0.65rem", letterSpacing: "0.14em", fontFamily: "'Courier New', monospace", textAlign: "left" }}>
-            <div>🗑 DELETE SAVE</div>
-            <div style={{ fontSize: "0.52rem", color: "#ff6b6b88", marginTop: "3px" }}>Permanently erase all progress</div>
-          </button>
-        </div>
+        <button onClick={onShowDeleteConfirm} style={{ width: "100%", background: "#1a0808", border: "1px solid #ff6b6b88", borderRadius: "6px", color: "#ff6b6b", padding: "12px 20px", cursor: "pointer", fontSize: "0.65rem", letterSpacing: "0.14em", fontFamily: "'Courier New', monospace", textAlign: "left" }}>
+          <div>🗑 DELETE SAVE</div>
+          <div style={{ fontSize: "0.52rem", color: "#ff6b6b88", marginTop: "3px" }}>Erase cloud save and reset all progress</div>
+        </button>
       </div>
 
       <div style={{ fontSize: "0.5rem", color: theme.textFaint, letterSpacing: "0.12em", textAlign: "center", marginTop: "20px", lineHeight: 2 }}>

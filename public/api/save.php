@@ -64,5 +64,20 @@ if ($method === 'POST') {
     exit;
 }
 
+// ── DELETE: erase save ────────────────────────────────────────────────────────
+if ($method === 'DELETE') {
+    $body  = json_decode(file_get_contents('php://input'), true);
+    $token = $body['token'] ?? '';
+    if (!validToken($token)) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Invalid token']);
+        exit;
+    }
+    $stmt = $pdo->prepare('DELETE FROM saves WHERE token = ?');
+    $stmt->execute([$token]);
+    echo json_encode(['ok' => true]);
+    exit;
+}
+
 http_response_code(405);
 echo json_encode(['error' => 'Method not allowed']);
