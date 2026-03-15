@@ -45,7 +45,7 @@ export async function cloudDelete(token) {
 export async function cloudPull(token) {
   const t = token || getToken();
   if (!t) return null;
-  const res = await fetch(`${API_URL}?token=${encodeURIComponent(t)}`);
+  const res = await fetch(`${API_URL}?token=${encodeURIComponent(t)}&_=${Date.now()}`);
   if (res.status === 404) return null;
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const data = await res.json();
