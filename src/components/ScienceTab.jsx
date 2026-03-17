@@ -31,12 +31,10 @@ function SciConverterRow({ tier, idx, state, sciBonus, buySciConverter }) {
   const era    = SCI_ERAS[tier.unlockEra];
   const locked = (state.sciEra || 0) < tier.unlockEra;
 
-  // Cost currency label
   const costLabel = idx === 0
     ? `${fmt(cost)} Culture`
     : `${fmt(cost)} ${SCI_TIERS[idx - 1].name}`;
 
-  // Can afford?
   const canAfford = idx === 0
     ? (state.culture || 0) >= cost
     : (state.sciAmounts[idx - 1] || 0) >= cost;
@@ -45,31 +43,31 @@ function SciConverterRow({ tier, idx, state, sciBonus, buySciConverter }) {
     <div style={{
       display: "grid", gridTemplateColumns: "1fr auto",
       alignItems: "center", gap: "8px",
-      padding: "5px 8px", marginBottom: "3px",
+      padding: "7px 10px", marginBottom: "4px",
       background: locked ? "#050a10" : SCI_DARK,
       border: "1px solid " + (locked ? "#0a1830" : SCI_MID),
       borderRadius: "5px", opacity: locked ? 0.4 : 1,
     }}>
       <div>
-        <span style={{ color: tier.color, marginRight: "5px" }}>{tier.emoji}</span>
-        <span style={{ color: locked ? "#2a3a5a" : "#8ab4f8", fontSize: "0.65rem", letterSpacing: "0.1em" }}>
+        <span style={{ color: tier.color, marginRight: "6px" }}>{tier.emoji}</span>
+        <span style={{ color: locked ? "#3a5a7a" : "#8ab4f8", fontSize: "0.78rem", letterSpacing: "0.08em" }}>
           {tier.name.toUpperCase()}
         </span>
-        <span style={{ color: "#4a6a9a", fontSize: "0.55rem", marginLeft: "8px" }}>
+        <span style={{ color: "#5a7aaa", fontSize: "0.70rem", marginLeft: "8px" }}>
           ×{owned}
         </span>
         {locked && (
-          <span style={{ color: "#2a4a7a", fontSize: "0.5rem", marginLeft: "6px" }}>
+          <span style={{ color: "#3a5a7a", fontSize: "0.65rem", marginLeft: "8px" }}>
             [unlocks: {era.name}]
           </span>
         )}
         {!locked && !atCap && (
-          <span style={{ color: canAfford ? "#4d96ff88" : "#1a3050", fontSize: "0.5rem", marginLeft: "6px" }}>
+          <span style={{ color: canAfford ? "#6a9adf" : "#3a5a80", fontSize: "0.65rem", marginLeft: "8px" }}>
             — {costLabel}
           </span>
         )}
         {!locked && atCap && owned > 0 && (
-          <span style={{ color: "#2a4a6a", fontSize: "0.5rem", marginLeft: "6px" }}>— at cap</span>
+          <span style={{ color: "#4a6a8a", fontSize: "0.65rem", marginLeft: "8px" }}>— at cap</span>
         )}
       </div>
       {!locked && (
@@ -79,9 +77,9 @@ function SciConverterRow({ tier, idx, state, sciBonus, buySciConverter }) {
           style={{
             background: canAfford && !atCap ? SCI_MID : "#050a14",
             border: "1px solid " + (canAfford && !atCap ? SCI_COLOR + "88" : "#0a1830"),
-            borderRadius: "4px", color: canAfford && !atCap ? SCI_COLOR : "#1a3050",
-            padding: "3px 10px", cursor: canAfford && !atCap ? "pointer" : "not-allowed",
-            fontSize: "0.55rem", letterSpacing: "0.1em", fontFamily: "'Courier New', monospace",
+            borderRadius: "4px", color: canAfford && !atCap ? SCI_COLOR : "#3a5a80",
+            padding: "4px 12px", cursor: canAfford && !atCap ? "pointer" : "not-allowed",
+            fontSize: "0.70rem", letterSpacing: "0.08em", fontFamily: "'Courier New', monospace",
           }}
         >+1</button>
       )}
@@ -100,20 +98,20 @@ function DiscoveryCard({ disc, state, sciBonus, purchaseDiscovery }) {
     <div style={{
       display: "grid", gridTemplateColumns: "1fr auto",
       alignItems: "center", gap: "8px",
-      padding: "6px 10px", marginBottom: "4px",
+      padding: "8px 12px", marginBottom: "5px",
       background: owned ? "#060e1a" : SCI_DARK,
       border: "1px solid " + (owned ? "#0d1e34" : depsOk ? SCI_MID : "#0a1428"),
-      borderRadius: "5px", opacity: owned ? 0.45 : 1,
+      borderRadius: "5px", opacity: owned ? 0.5 : 1,
     }}>
       <div>
-        <span style={{ color: owned ? "#2a4a6a" : "#8ab4f8", fontSize: "0.65rem", letterSpacing: "0.1em" }}>
+        <span style={{ color: owned ? "#4a6a8a" : "#8ab4f8", fontSize: "0.78rem", letterSpacing: "0.08em" }}>
           {disc.name.toUpperCase()}
         </span>
-        <span style={{ color: owned ? "#1a3050" : "#4a7aaa", fontSize: "0.55rem", marginLeft: "8px" }}>
+        <span style={{ color: owned ? "#3a5a7a" : "#6a9acc", fontSize: "0.70rem", marginLeft: "10px" }}>
           {disc.desc}
         </span>
         {!owned && !depsOk && (
-          <div style={{ color: "#2a4060", fontSize: "0.48rem", marginTop: "2px" }}>
+          <div style={{ color: "#3a5a80", fontSize: "0.65rem", marginTop: "3px" }}>
             requires: {disc.deps.join(", ").replace(/_/g, " ")}
           </div>
         )}
@@ -125,15 +123,15 @@ function DiscoveryCard({ disc, state, sciBonus, purchaseDiscovery }) {
           style={{
             background: depsOk && canAfford ? SCI_MID : "#050a14",
             border: "1px solid " + (depsOk && canAfford ? SCI_COLOR + "88" : "#0a1830"),
-            borderRadius: "4px", color: depsOk && canAfford ? SCI_COLOR : "#1a3050",
-            padding: "3px 10px", cursor: depsOk && canAfford ? "pointer" : "not-allowed",
-            fontSize: "0.55rem", letterSpacing: "0.08em", fontFamily: "'Courier New', monospace",
+            borderRadius: "4px", color: depsOk && canAfford ? SCI_COLOR : "#3a5a80",
+            padding: "4px 12px", cursor: depsOk && canAfford ? "pointer" : "not-allowed",
+            fontSize: "0.68rem", letterSpacing: "0.06em", fontFamily: "'Courier New', monospace",
             whiteSpace: "nowrap",
           }}
-        >{depsOk ? (canAfford ? `${fmt(rawCost)} ⚗` : `${fmt(rawCost)} ⚗`) : "LOCKED"}</button>
+        >{depsOk ? `${fmt(rawCost)} ⚗` : "LOCKED"}</button>
       )}
       {owned && (
-        <span style={{ color: "#1a3050", fontSize: "0.5rem" }}>KNOWN</span>
+        <span style={{ color: "#4a6a8a", fontSize: "0.65rem" }}>KNOWN</span>
       )}
     </div>
   );
@@ -148,16 +146,16 @@ function PathJunction({ eraId, state, chooseSciPath }) {
     const path = options.find(p => p.id === chosen);
     return (
       <div style={{
-        padding: "8px 12px", marginBottom: "10px",
+        padding: "10px 14px", marginBottom: "12px",
         background: "#060e20", border: "1px solid #2a4a7a",
-        borderRadius: "6px", display: "flex", alignItems: "center", gap: "10px",
+        borderRadius: "6px", display: "flex", alignItems: "center", gap: "12px",
       }}>
-        <span style={{ fontSize: "1.1rem" }}>{path?.icon}</span>
+        <span style={{ fontSize: "1.2rem" }}>{path?.icon}</span>
         <div>
-          <div style={{ color: "#6aa4e0", fontSize: "0.6rem", letterSpacing: "0.12em" }}>
+          <div style={{ color: "#7ab4f0", fontSize: "0.75rem", letterSpacing: "0.1em" }}>
             RESEARCH DIRECTION — {path?.name.toUpperCase()}
           </div>
-          <div style={{ color: "#3a6a9a", fontSize: "0.5rem", marginTop: "2px" }}>
+          <div style={{ color: "#5a8abf", fontSize: "0.68rem", marginTop: "3px" }}>
             {path?.effects.map(e => e.label).join(" · ")}
           </div>
         </div>
@@ -166,32 +164,32 @@ function PathJunction({ eraId, state, chooseSciPath }) {
   }
 
   return (
-    <div style={{ marginBottom: "12px" }}>
+    <div style={{ marginBottom: "14px" }}>
       <div style={{
-        fontSize: "0.58rem", color: "#6aa4e0", letterSpacing: "0.18em",
-        marginBottom: "8px", textAlign: "center",
+        fontSize: "0.72rem", color: "#6aa4e0", letterSpacing: "0.14em",
+        marginBottom: "10px", textAlign: "center",
       }}>
         ── CHOOSE RESEARCH DIRECTION ──
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: `repeat(${options.length}, 1fr)`, gap: "8px" }}>
+      <div style={{ display: "grid", gridTemplateColumns: `repeat(${options.length}, 1fr)`, gap: "10px" }}>
         {options.map(path => (
           <div key={path.id} style={{
-            padding: "10px 12px", background: SCI_DARK,
+            padding: "12px 14px", background: SCI_DARK,
             border: "1px solid " + SCI_COLOR + "55",
             borderRadius: "8px", cursor: "pointer",
           }}
             onClick={() => chooseSciPath(eraId, path.id)}
           >
-            <div style={{ fontSize: "1.3rem", marginBottom: "4px" }}>{path.icon}</div>
-            <div style={{ color: "#8ab4f8", fontSize: "0.6rem", letterSpacing: "0.1em", marginBottom: "6px" }}>
+            <div style={{ fontSize: "1.4rem", marginBottom: "6px" }}>{path.icon}</div>
+            <div style={{ color: "#8ab4f8", fontSize: "0.75rem", letterSpacing: "0.08em", marginBottom: "6px" }}>
               {path.name.toUpperCase()}
             </div>
-            <div style={{ color: "#3a6a9a", fontSize: "0.5rem", marginBottom: "8px" }}>
+            <div style={{ color: "#5a8abf", fontSize: "0.68rem", marginBottom: "10px" }}>
               {path.desc}
             </div>
-            <div style={{ marginBottom: "8px" }}>
+            <div style={{ marginBottom: "10px" }}>
               {path.effects.map((eff, i) => (
-                <div key={i} style={{ color: "#5a8aaa", fontSize: "0.48rem", paddingLeft: "6px" }}>
+                <div key={i} style={{ color: "#6a9ac0", fontSize: "0.65rem", paddingLeft: "6px" }}>
                   · {eff.label}
                 </div>
               ))}
@@ -199,8 +197,8 @@ function PathJunction({ eraId, state, chooseSciPath }) {
             <button style={{
               width: "100%", background: "#0a1428",
               border: "1px solid " + SCI_COLOR + "88",
-              borderRadius: "4px", color: SCI_COLOR, padding: "4px",
-              cursor: "pointer", fontSize: "0.5rem", letterSpacing: "0.12em",
+              borderRadius: "4px", color: SCI_COLOR, padding: "5px",
+              cursor: "pointer", fontSize: "0.68rem", letterSpacing: "0.1em",
               fontFamily: "'Courier New', monospace",
             }}>COMMIT</button>
           </div>
@@ -216,17 +214,17 @@ function UpgradeCard({ up, owned, canAfford, currency, onBuy }) {
     <div style={{
       display: "grid", gridTemplateColumns: "1fr auto",
       alignItems: "center", gap: "8px",
-      padding: "6px 10px", marginBottom: "4px",
+      padding: "8px 12px", marginBottom: "5px",
       background: owned ? "#060e1a" : SCI_DARK,
       border: "1px solid " + (owned ? "#0d1e34" : SCI_MID),
-      borderRadius: "5px", opacity: owned ? 0.45 : 1,
+      borderRadius: "5px", opacity: owned ? 0.5 : 1,
     }}>
       <div>
-        <span style={{ marginRight: "6px" }}>{up.icon}</span>
-        <span style={{ color: owned ? "#2a4a6a" : "#8ab4f8", fontSize: "0.65rem", letterSpacing: "0.1em" }}>
+        <span style={{ marginRight: "8px" }}>{up.icon}</span>
+        <span style={{ color: owned ? "#4a6a8a" : "#8ab4f8", fontSize: "0.78rem", letterSpacing: "0.08em" }}>
           {up.name.toUpperCase()}
         </span>
-        <span style={{ color: owned ? "#1a3050" : "#4a7aaa", fontSize: "0.55rem", marginLeft: "8px" }}>
+        <span style={{ color: owned ? "#3a5a7a" : "#6a9acc", fontSize: "0.70rem", marginLeft: "10px" }}>
           {up.desc}
         </span>
       </div>
@@ -237,14 +235,14 @@ function UpgradeCard({ up, owned, canAfford, currency, onBuy }) {
           style={{
             background: canAfford ? SCI_MID : "#050a14",
             border: "1px solid " + (canAfford ? SCI_COLOR + "88" : "#0a1830"),
-            borderRadius: "4px", color: canAfford ? SCI_COLOR : "#1a3050",
-            padding: "3px 10px", cursor: canAfford ? "pointer" : "not-allowed",
-            fontSize: "0.52rem", letterSpacing: "0.08em", fontFamily: "'Courier New', monospace",
+            borderRadius: "4px", color: canAfford ? SCI_COLOR : "#3a5a80",
+            padding: "4px 12px", cursor: canAfford ? "pointer" : "not-allowed",
+            fontSize: "0.68rem", letterSpacing: "0.06em", fontFamily: "'Courier New', monospace",
             whiteSpace: "nowrap",
           }}
         >{up.cost} {currency}</button>
       )}
-      {owned && <span style={{ color: "#1a3050", fontSize: "0.5rem" }}>OWNED</span>}
+      {owned && <span style={{ color: "#4a6a8a", fontSize: "0.68rem" }}>OWNED</span>}
     </div>
   );
 }
@@ -268,7 +266,6 @@ export default function ScienceTab({
   const wildcardsDrawn = ((state.sciWildcards || {})[currentEra.id] || []);
   const allWildcardIds = Object.values(SCI_WILDCARD_POOLS).flat().map(w => w.id);
 
-  // Compute current-era Science rate for display
   const sciRate = SCI_TIERS.reduce((sum, tier, i) => {
     if (i > 0) return sum;
     const owned = state.sciConverters[i] || 0;
@@ -280,27 +277,27 @@ export default function ScienceTab({
   // ── SCIENCE (converters) view ───────────────────────────────────────────────
   if (view === "science") {
     return (
-      <div style={{ color: theme.text, fontSize: "0.72rem" }}>
+      <div style={{ color: theme.text, fontSize: "0.82rem" }}>
         {/* Resource bar */}
         <div style={{
-          padding: "8px 12px", marginBottom: "12px",
+          padding: "10px 14px", marginBottom: "14px",
           background: SCI_DARK, border: "1px solid " + SCI_MID, borderRadius: "6px",
           display: "flex", justifyContent: "space-between", alignItems: "center",
         }}>
           <div>
-            <span style={{ color: SCI_COLOR, letterSpacing: "0.12em" }}>⚗ SCIENCE</span>
-            <span style={{ color: "#3a6a9a", fontSize: "0.55rem", marginLeft: "10px" }}>
+            <span style={{ color: SCI_COLOR, letterSpacing: "0.1em", fontSize: "0.82rem" }}>⚗ SCIENCE</span>
+            <span style={{ color: "#6a9acc", fontSize: "0.75rem", marginLeft: "12px" }}>
               {fmt(state.science || 0)} ({fmt(sciRate)}/s)
             </span>
           </div>
-          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+          <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
             {(state.innovations || 0) > 0 && (
-              <span style={{ color: "#7ab8f5", fontSize: "0.55rem" }}>
+              <span style={{ color: "#7ab8f5", fontSize: "0.72rem" }}>
                 💡 {state.innovations} Innovations
               </span>
             )}
             {(state.breakthroughs || 0) > 0 && (
-              <span style={{ color: "#5ab0ff", fontSize: "0.55rem" }}>
+              <span style={{ color: "#5ab0ff", fontSize: "0.72rem" }}>
                 🌟 {state.breakthroughs} Breakthroughs
               </span>
             )}
@@ -309,14 +306,14 @@ export default function ScienceTab({
 
         {/* Paradigm Shift */}
         {paradigmAvailable && (
-          <div style={{ marginBottom: "10px", textAlign: "center" }}>
+          <div style={{ marginBottom: "12px", textAlign: "center" }}>
             <button
               onClick={doParadigmShift}
               style={{
                 background: "#0a0a1e", border: "1px solid #4d96ff88",
                 borderRadius: "5px", color: "#4d96ff",
-                padding: "6px 20px", cursor: "pointer",
-                fontSize: "0.6rem", letterSpacing: "0.14em",
+                padding: "8px 22px", cursor: "pointer",
+                fontSize: "0.75rem", letterSpacing: "0.12em",
                 fontFamily: "'Courier New', monospace",
               }}
             >🔄 PARADIGM SHIFT — reset Science, gain Breakthroughs & Innovations</button>
@@ -324,15 +321,15 @@ export default function ScienceTab({
         )}
 
         {/* Era indicator */}
-        <div style={{ marginBottom: "8px" }}>
-          <div style={{ fontSize: "0.5rem", color: currentEra.color, letterSpacing: "0.16em", marginBottom: "4px" }}>
+        <div style={{ marginBottom: "10px" }}>
+          <div style={{ fontSize: "0.68rem", color: currentEra.color, letterSpacing: "0.14em", marginBottom: "4px" }}>
             ── ERA: {currentEra.name.toUpperCase()} ──
           </div>
         </div>
 
         {/* Converters */}
-        <div style={{ marginBottom: "12px" }}>
-          <div style={{ fontSize: "0.5rem", color: "#2a4a7a", letterSpacing: "0.14em", marginBottom: "6px" }}>
+        <div style={{ marginBottom: "14px" }}>
+          <div style={{ fontSize: "0.65rem", color: "#4a6a9a", letterSpacing: "0.12em", marginBottom: "8px" }}>
             ── SCIENCE CONVERTERS ──
           </div>
           {SCI_TIERS.map((tier, i) => (
@@ -346,8 +343,8 @@ export default function ScienceTab({
 
         {/* Innovations */}
         {(state.paradigmShiftCount || 0) > 0 && (
-          <div style={{ marginBottom: "12px" }}>
-            <div style={{ fontSize: "0.5rem", color: "#2a5a7a", letterSpacing: "0.14em", marginBottom: "6px" }}>
+          <div style={{ marginBottom: "14px" }}>
+            <div style={{ fontSize: "0.65rem", color: "#4a6a9a", letterSpacing: "0.12em", marginBottom: "8px" }}>
               ── INNOVATIONS ({state.innovations || 0} available) ──
             </div>
             {INNOVATION_UPGRADES.map(up => {
@@ -364,7 +361,7 @@ export default function ScienceTab({
         {/* Breakthroughs */}
         {(state.breakthroughs || 0) > 0 && (
           <div>
-            <div style={{ fontSize: "0.5rem", color: "#2a5a7a", letterSpacing: "0.14em", marginBottom: "6px" }}>
+            <div style={{ fontSize: "0.65rem", color: "#4a6a9a", letterSpacing: "0.12em", marginBottom: "8px" }}>
               ── BREAKTHROUGHS ({state.breakthroughs || 0} available) ──
             </div>
             {BREAKTHROUGH_UPGRADES.map(up => {
@@ -382,9 +379,8 @@ export default function ScienceTab({
   }
 
   // ── RESEARCH (tech tree) view ───────────────────────────────────────────────
-  // Show all eras up to and including current
   return (
-    <div style={{ color: theme.text, fontSize: "0.72rem" }}>
+    <div style={{ color: theme.text, fontSize: "0.82rem" }}>
       {SCI_ERAS.map((era, eraIdx) => {
         if (eraIdx > (state.sciEra || 0)) return null;
 
@@ -395,9 +391,9 @@ export default function ScienceTab({
         const showJunction = (state.totalScienceEver || 0) >= era.junctionAt;
 
         return (
-          <div key={era.id} style={{ marginBottom: "16px" }}>
+          <div key={era.id} style={{ marginBottom: "18px" }}>
             {/* Era header */}
-            <div style={{ fontSize: "0.54rem", color: era.color, letterSpacing: "0.2em", marginBottom: "8px" }}>
+            <div style={{ fontSize: "0.70rem", color: era.color, letterSpacing: "0.16em", marginBottom: "10px" }}>
               ── ERA: {era.name.toUpperCase()} ──
             </div>
 
@@ -407,8 +403,8 @@ export default function ScienceTab({
             )}
 
             {/* Core discoveries */}
-            <div style={{ marginBottom: "6px" }}>
-              <div style={{ fontSize: "0.48rem", color: "#2a4a7a", letterSpacing: "0.12em", marginBottom: "4px" }}>
+            <div style={{ marginBottom: "8px" }}>
+              <div style={{ fontSize: "0.65rem", color: "#4a6a9a", letterSpacing: "0.1em", marginBottom: "6px" }}>
                 DISCOVERIES
               </div>
               {coreDiscs.map(disc => (
@@ -417,10 +413,10 @@ export default function ScienceTab({
               ))}
             </div>
 
-            {/* Wildcard discoveries (only shown if drawn) */}
+            {/* Wildcard discoveries */}
             {wcDiscs.length > 0 && (
               <div>
-                <div style={{ fontSize: "0.48rem", color: "#2a5a4a", letterSpacing: "0.12em", marginBottom: "4px" }}>
+                <div style={{ fontSize: "0.65rem", color: "#4a7a6a", letterSpacing: "0.1em", marginBottom: "6px" }}>
                   WILDCARD DISCOVERIES
                 </div>
                 {wcDiscs.map(disc => (
