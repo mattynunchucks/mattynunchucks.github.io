@@ -2,7 +2,7 @@ import React from "react";
 import {
   SCI_TIERS, SCI_ERAS, SCI_PATHS, SCI_CORE_DISCOVERIES, SCI_WILDCARD_POOLS,
   INNOVATION_UPGRADES, BREAKTHROUGH_UPGRADES,
-  sciConverterCost, sciMaxConverters, sciEraIndex,
+  SCI_BASE_RATE, sciConverterCost, sciMaxConverters, sciEraIndex,
 } from "../data/science";
 import { calcScienceBonuses } from "../game/stats";
 
@@ -31,57 +31,69 @@ function SciConverterRow({ tier, idx, state, sciBonus, buySciConverter }) {
   const era    = SCI_ERAS[tier.unlockEra];
   const locked = (state.sciEra || 0) < tier.unlockEra;
 
-  const costLabel = idx === 0
-    ? `${fmt(cost)} Culture`
-    : `${fmt(cost)} ${SCI_TIERS[idx - 1].name}`;
+  const balance   = idx === 0 ? (state.culture || 0) : (state.sciAmounts[idx - 1] || 0);
+  const costCurrency = idx === 0 ? "Culture" : SCI_TIERS[idx - 1].name;
+  const canAfford = balance >= cost;
 
-  const canAfford = idx === 0
-    ? (state.culture || 0) >= cost
-    : (state.sciAmounts[idx - 1] || 0) >= cost;
+  // Production rate: what this tier generates per second
+  const prodMul = idx === 0 ? sciBonus.sciProdMult : 1;
+  const rate    = owned * SCI_BASE_RATE * Math.pow(1.5, idx) * sciBonus.sciTierMult[idx] * sciBonus.sciGlobal * prodMul;
+  // What this tier produces: tier 0 → Science, tier i → currency for buying tier i+1
+  const outputName = idx === 0 ? "Science" : SCI_TIERS[idx].name;
 
   return (
     <div style={{
-      display: "grid", gridTemplateColumns: "1fr auto",
-      alignItems: "center", gap: "8px",
       padding: "7px 10px", marginBottom: "4px",
       background: locked ? "#050a10" : SCI_DARK,
       border: "1px solid " + (locked ? "#0a1830" : SCI_MID),
       borderRadius: "5px", opacity: locked ? 0.4 : 1,
     }}>
-      <div>
-        <span style={{ color: tier.color, marginRight: "6px" }}>{tier.emoji}</span>
-        <span style={{ color: locked ? "#3a5a7a" : "#8ab4f8", fontSize: "0.78rem", letterSpacing: "0.08em" }}>
-          {tier.name.toUpperCase()}
-        </span>
-        <span style={{ color: "#5a7aaa", fontSize: "0.70rem", marginLeft: "8px" }}>
-          ×{owned}
-        </span>
-        {locked && (
-          <span style={{ color: "#3a5a7a", fontSize: "0.65rem", marginLeft: "8px" }}>
-            [unlocks: {era.name}]
+      <div style={{ display: "grid", gridTemplateColumns: "1fr auto", alignItems: "center", gap: "8px" }}>
+        <div>
+          <span style={{ color: tier.color, marginRight: "6px" }}>{tier.emoji}</span>
+          <span style={{ color: locked ? "#3a5a7a" : "#8ab4f8", fontSize: "0.78rem", letterSpacing: "0.08em" }}>
+            {tier.name.toUpperCase()}
           </span>
-        )}
-        {!locked && !atCap && (
-          <span style={{ color: canAfford ? "#6a9adf" : "#3a5a80", fontSize: "0.65rem", marginLeft: "8px" }}>
-            — {costLabel}
+          <span style={{ color: "#5a7aaa", fontSize: "0.70rem", marginLeft: "8px" }}>
+            {atCap && cap !== Infinity ? `${owned}/${cap} (cap)` : `×${owned}`}
           </span>
-        )}
-        {!locked && atCap && owned > 0 && (
-          <span style={{ color: "#4a6a8a", fontSize: "0.65rem", marginLeft: "8px" }}>— at cap</span>
+          {locked && (
+            <span style={{ color: "#3a5a7a", fontSize: "0.65rem", marginLeft: "8px" }}>
+              [unlocks: {era.name}]
+            </span>
+          )}
+        </div>
+        {!locked && (
+          <button
+            onClick={() => buySciConverter(idx)}
+            disabled={atCap || !canAfford}
+            style={{
+              background: canAfford && !atCap ? SCI_MID : "#050a14",
+              border: "1px solid " + (canAfford && !atCap ? SCI_COLOR + "88" : "#0a1830"),
+              borderRadius: "4px", color: canAfford && !atCap ? SCI_COLOR : "#3a5a80",
+              padding: "4px 12px", cursor: canAfford && !atCap ? "pointer" : "not-allowed",
+              fontSize: "0.70rem", letterSpacing: "0.08em", fontFamily: "'Courier New', monospace",
+            }}
+          >+1</button>
         )}
       </div>
       {!locked && (
-        <button
-          onClick={() => buySciConverter(idx)}
-          disabled={atCap || !canAfford}
-          style={{
-            background: canAfford && !atCap ? SCI_MID : "#050a14",
-            border: "1px solid " + (canAfford && !atCap ? SCI_COLOR + "88" : "#0a1830"),
-            borderRadius: "4px", color: canAfford && !atCap ? SCI_COLOR : "#3a5a80",
-            padding: "4px 12px", cursor: canAfford && !atCap ? "pointer" : "not-allowed",
-            fontSize: "0.70rem", letterSpacing: "0.08em", fontFamily: "'Courier New', monospace",
-          }}
-        >+1</button>
+        <div style={{ display: "flex", gap: "16px", marginTop: "4px", fontSize: "0.65rem" }}>
+          <span style={{ color: "#5a8abf" }}>
+            ↑ {fmt(rate)}/s {outputName}
+          </span>
+          {!atCap && (
+            <span style={{ color: canAfford ? "#6a9adf" : "#3a5a80" }}>
+              costs {fmt(cost)} {costCurrency}
+              <span style={{ color: "#4a6a8a", marginLeft: "6px" }}>
+                (bal: {fmt(balance)})
+              </span>
+            </span>
+          )}
+          {atCap && cap !== Infinity && (
+            <span style={{ color: "#4a6a8a" }}>cap reached — buy more {SCI_TIERS[idx - 1]?.name}</span>
+          )}
+        </div>
       )}
     </div>
   );
