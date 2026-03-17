@@ -374,6 +374,37 @@ export default function UniverseGame() {
     });
   }, []);
 
+  const buyEchoGen = useCallback(() => {
+    setState(s => {
+      const level = s.echoGenLevel || 0;
+      const cost  = Math.floor(level / 5) + 1;
+      if ((s.relics || 0) < cost) return s;
+      const newLevel = level + 1;
+      return {
+        ...s,
+        relics:      (s.relics || 0) - cost,
+        echoGenLevel: newLevel,
+        log: [`💫 Echo Generator Lv.${newLevel} — +${(newLevel * 0.1).toFixed(1)} echoes/s`, ...s.log.slice(0, 49)],
+      };
+    });
+  }, []);
+
+  const buyCultureFromSci = useCallback(() => {
+    setState(s => {
+      if (!s.sciUnlocked || (s.paradigmShiftCount || 0) < 1) return s;
+      const level = s.cultureFromSciLevel || 0;
+      const cost  = Math.floor(level / 5) + 1;
+      if ((s.breakthroughs || 0) < cost) return s;
+      const newLevel = level + 1;
+      return {
+        ...s,
+        breakthroughs:      (s.breakthroughs || 0) - cost,
+        cultureFromSciLevel: newLevel,
+        log: [`🌿 Culture Amplifier Lv.${newLevel} — +${(newLevel * newLevel * 10000).toLocaleString()} culture/s`, ...s.log.slice(0, 49)],
+      };
+    });
+  }, []);
+
   // ── Science handlers ─────────────────────────────────────────────────────────
 
   const unlockScience = useCallback(() => {
@@ -876,6 +907,7 @@ export default function UniverseGame() {
             surgeActive={surgeActive} activateCultureSurge={activateCultureSurge}
             relicCultureMult={relicCultureMult} hasDarkWisdom={hasDarkWisdom}
             buyRelicUpgrade={buyRelicUpgrade}
+            buyEchoGen={buyEchoGen}
             view={tab === "civpolicies" ? "civpolicies" : "civ"}
           />
         )}
@@ -889,6 +921,7 @@ export default function UniverseGame() {
             doParadigmShift={doParadigmShift}
             buyInnovation={buyInnovation}
             buyBreakthrough={buyBreakthrough}
+            buyCultureFromSci={buyCultureFromSci}
           />
         )}
         {tab === "settings" && (

@@ -52,5 +52,7 @@ export function buildInitState() {
     totalInnovationsEarned: 0,
     purchasedInnovations:   [],
     purchasedBreakthroughs: [],
+    echoGenLevel:           0,
+    cultureFromSciLevel:    0,
   };
 }

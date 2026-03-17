@@ -5,7 +5,7 @@ import { civConverterCost, civMaxConverters } from "../game/converters";
 import { calcCivMindBonus, calcCivBonuses } from "../game/stats";
 import { fmt } from "../utils/format";
 
-export default function CivilisationTab({ state, theme, buyCivConverter, dismissEra, chooseEra, handleBuyPolicy, doDarkAges, buyCivStudy, civEchoStudyLevel, civEchoStudyBonus, civProdBonus, civFestival, surgeActive, activateCultureSurge, relicCultureMult, hasDarkWisdom, buyRelicUpgrade, view = "civ" }) {
+export default function CivilisationTab({ state, theme, buyCivConverter, dismissEra, chooseEra, handleBuyPolicy, doDarkAges, buyCivStudy, civEchoStudyLevel, civEchoStudyBonus, civProdBonus, civFestival, surgeActive, activateCultureSurge, relicCultureMult, hasDarkWisdom, buyRelicUpgrade, buyEchoGen, view = "civ" }) {
   const [showDarkAgesConfirm, setShowDarkAgesConfirm] = useState(false);
 
   const eraChoices       = state.eraChoices       || {};
@@ -123,6 +123,44 @@ export default function CivilisationTab({ state, theme, buyCivConverter, dismiss
                   Trigger a Dark Age to earn your first Relic.
                 </div>
               )}
+              {/* ── Echo Generator ── */}
+              {(state.totalRelicsEarned || 0) >= 1 && (() => {
+                const level    = state.echoGenLevel || 0;
+                const cost     = Math.floor(level / 5) + 1;
+                const canAfford = (state.relics || 0) >= cost;
+                const rate     = level * 0.1;
+                return (
+                  <div style={{
+                    display: "grid", gridTemplateColumns: "1fr auto", alignItems: "center",
+                    background: "#0a0810", border: `1px solid ${canAfford ? "#8866ff66" : "#1a1428"}`,
+                    borderRadius: "6px", padding: "8px 12px", gap: "10px", marginBottom: "8px",
+                  }}>
+                    <div>
+                      <div style={{ fontSize: "0.67rem", fontWeight: "bold", color: "#aa88ff" }}>
+                        💫 Echo Generator {level > 0 && `Lv.${level}`}
+                      </div>
+                      <div style={{ fontSize: "0.58rem", color: "#7a68cc", marginTop: "2px" }}>
+                        {level === 0
+                          ? "Passively generate Echoes over time"
+                          : `+${rate.toFixed(1)} echoes/s`}
+                      </div>
+                      <div style={{ fontSize: "0.54rem", color: "#3a2a60", marginTop: "3px" }}>
+                        Cost: <span style={{ color: canAfford ? "#aa88ffaa" : "#cc4444aa" }}>{cost} Relic{cost !== 1 ? "s" : ""} 🏺</span>
+                        {level > 0 && <span style={{ color: "#5a4a90", marginLeft: "8px" }}>→ Lv.{level + 1}: +{((level + 1) * 0.1).toFixed(1)}/s</span>}
+                      </div>
+                    </div>
+                    <button onClick={buyEchoGen} disabled={!canAfford} style={{
+                      background: canAfford ? "#8866ff22" : "transparent",
+                      border: `1px solid ${canAfford ? "#8866ff" : "#2a1a40"}`,
+                      borderRadius: "5px", color: canAfford ? "#aa88ff" : "#3a2050",
+                      padding: "6px 12px", cursor: canAfford ? "pointer" : "not-allowed",
+                      fontSize: "0.58rem", letterSpacing: "0.1em", whiteSpace: "nowrap",
+                      fontFamily: "'Courier New', monospace",
+                    }}>{level === 0 ? "INSTALL" : "UPGRADE"}</button>
+                  </div>
+                );
+              })()}
+
               {RELIC_UPGRADES.map(up => {
                 const owned          = purchasedRelicUpgrades.includes(up.id);
                 const hasRelics      = relics >= up.cost;

@@ -223,17 +223,33 @@ export function applyTick(state, dt) {
     }
   }
 
+  // ── Echo auto-generator (relic upgrade) ────────────────────────────────────
+  const echoGenLevel  = state.echoGenLevel || 0;
+  const echoGenGain   = echoGenLevel * 0.1 * dt;
+  const echoes        = (state.echoes || 0) + echoGenGain;
+  const totalEchoesEarned = (state.totalEchoesEarned || 0) + echoGenGain;
+
+  // ── Culture auto-generator (science upgrade) ────────────────────────────────
+  const cultureFromSciLevel = state.cultureFromSciLevel || 0;
+  const cultureFromSciGain  = cultureFromSciLevel * cultureFromSciLevel * 10000 * dt;
+  if (cultureFromSciGain > 0) {
+    culture     += cultureFromSciGain;
+    // totalCultureEver already declared above — add the bonus contribution
+  }
+  const totalCultureEverFinal = totalCultureEver + cultureFromSciGain;
+
   return {
     ...state,
     amounts, converters, purchasedUpgrades, purchasedPolicies,
     totalMindsEver, totalQuarksEarned,
     firedDiscoveries: newFired,
     pendingDiscovery: newDiscovery,
-    civAmounts, civConverters, culture, totalCultureEver,
+    civAmounts, civConverters, culture, totalCultureEver: totalCultureEverFinal,
     pendingEra: newEra, firedEras: newFiredEras,
     pendingEraChoice,
     sciAmounts, sciConverters, science, totalScienceEver,
     sciEra: newSciEra, sciWildcards,
+    echoes, totalEchoesEarned,
     lastTick: Date.now(),
   };
 }

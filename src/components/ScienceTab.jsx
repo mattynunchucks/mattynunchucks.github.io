@@ -263,7 +263,7 @@ function UpgradeCard({ up, owned, canAfford, currency, onBuy }) {
 export default function ScienceTab({
   state, theme, view,
   buySciConverter, purchaseDiscovery, chooseSciPath,
-  doParadigmShift, buyInnovation, buyBreakthrough,
+  doParadigmShift, buyInnovation, buyBreakthrough, buyCultureFromSci,
 }) {
   const sciBonus = calcScienceBonuses(
     state.sciDiscoveries, state.sciPaths, state.paradigmShiftCount,
@@ -386,6 +386,50 @@ export default function ScienceTab({
             })}
           </div>
         )}
+
+        {/* Culture Amplifier — unlocks after first paradigm shift */}
+        {(state.paradigmShiftCount || 0) >= 1 && (() => {
+          const level     = state.cultureFromSciLevel || 0;
+          const cost      = Math.floor(level / 5) + 1;
+          const canAfford = (state.breakthroughs || 0) >= cost;
+          const rate      = level * level * 10000;
+          return (
+            <div style={{ marginTop: "14px" }}>
+              <div style={{ fontSize: "0.65rem", color: "#4a6a9a", letterSpacing: "0.12em", marginBottom: "8px" }}>
+                ── CULTURE AMPLIFIER ──
+              </div>
+              <div style={{
+                display: "grid", gridTemplateColumns: "1fr auto", alignItems: "center",
+                padding: "10px 12px", gap: "10px",
+                background: SCI_DARK, border: `1px solid ${canAfford ? "#4a9a6666" : SCI_MID}`,
+                borderRadius: "6px",
+              }}>
+                <div>
+                  <div style={{ color: "#7ac87a", fontSize: "0.78rem", letterSpacing: "0.08em" }}>
+                    🌿 CULTURE AMPLIFIER {level > 0 && `LV.${level}`}
+                  </div>
+                  <div style={{ color: "#5a9a5a", fontSize: "0.70rem", marginTop: "3px" }}>
+                    {level === 0
+                      ? "Channel scientific knowledge into cultural growth"
+                      : `+${fmt(rate)} culture/s`}
+                  </div>
+                  <div style={{ fontSize: "0.65rem", color: "#3a6a3a", marginTop: "4px" }}>
+                    Cost: <span style={{ color: canAfford ? "#7ac87aaa" : "#cc4444aa" }}>{cost} Breakthrough{cost !== 1 ? "s" : ""} 🌟</span>
+                    {level > 0 && <span style={{ color: "#4a7a4a", marginLeft: "10px" }}>→ Lv.{level + 1}: +{fmt((level + 1) * (level + 1) * 10000)}/s</span>}
+                  </div>
+                </div>
+                <button onClick={buyCultureFromSci} disabled={!canAfford} style={{
+                  background: canAfford ? "#2a5a2a44" : "#050a14",
+                  border: `1px solid ${canAfford ? "#4a9a6688" : "#0a1830"}`,
+                  borderRadius: "4px", color: canAfford ? "#7ac87a" : "#3a5a3a",
+                  padding: "6px 12px", cursor: canAfford ? "pointer" : "not-allowed",
+                  fontSize: "0.68rem", letterSpacing: "0.08em", fontFamily: "'Courier New', monospace",
+                  whiteSpace: "nowrap",
+                }}>{level === 0 ? "INSTALL" : "UPGRADE"}</button>
+              </div>
+            </div>
+          );
+        })()}
       </div>
     );
   }
