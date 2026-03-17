@@ -32,7 +32,7 @@ export default function PrestigeTab({
           <div>• Echoes = <span style={{ color: "#c77dff" }}>floor(log₂(lifetime Quarks ÷ {fmt(ECHO_THRESHOLD)}))</span></div>
           <div>• Each Echo = <span style={{ color: "#6bcb77" }}>+10% global production</span></div>
           <div style={{ marginTop: "6px", padding: "8px", background: "#0a1020", borderRadius: "5px" }}>
-            <div style={{ color: "#aaeeff" }}>Current bonus: <strong>×{pMult.toFixed(2)}</strong> ({state.totalEchoesEarned || 0} total echoes)</div>
+            <div style={{ color: "#aaeeff" }}>Current bonus: <strong>×{pMult.toFixed(2)}</strong> ({(state.totalEchoesEarned || 0).toFixed(2)} total echoes)</div>
             {prestigePreview > 0 && (
               <div style={{ color: "#c77dff", marginTop: "2px" }}>
                 After prestige: <strong>×{prestigeMultiplier((state.totalEchoesEarned || 0) + prestigePreview).toFixed(2)}</strong>

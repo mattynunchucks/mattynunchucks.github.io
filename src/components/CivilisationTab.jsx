@@ -128,7 +128,7 @@ export default function CivilisationTab({ state, theme, buyCivConverter, dismiss
                 const level    = state.echoGenLevel || 0;
                 const cost     = Math.floor(level / 5) + 1;
                 const canAfford = (state.relics || 0) >= cost;
-                const rate     = level * 0.1;
+                const rate     = level * 0.01;
                 return (
                   <div style={{
                     display: "grid", gridTemplateColumns: "1fr auto", alignItems: "center",
@@ -142,11 +142,11 @@ export default function CivilisationTab({ state, theme, buyCivConverter, dismiss
                       <div style={{ fontSize: "0.58rem", color: "#7a68cc", marginTop: "2px" }}>
                         {level === 0
                           ? "Passively generate Echoes over time"
-                          : `+${rate.toFixed(1)} echoes/s`}
+                          : `+${rate.toFixed(2)} echoes/s`}
                       </div>
                       <div style={{ fontSize: "0.54rem", color: "#3a2a60", marginTop: "3px" }}>
                         Cost: <span style={{ color: canAfford ? "#aa88ffaa" : "#cc4444aa" }}>{cost} Relic{cost !== 1 ? "s" : ""} 🏺</span>
-                        {level > 0 && <span style={{ color: "#5a4a90", marginLeft: "8px" }}>→ Lv.{level + 1}: +{((level + 1) * 0.1).toFixed(1)}/s</span>}
+                        {level > 0 && <span style={{ color: "#5a4a90", marginLeft: "8px" }}>→ Lv.{level + 1}: +{((level + 1) * 0.01).toFixed(2)}/s</span>}
                       </div>
                     </div>
                     <button onClick={buyEchoGen} disabled={!canAfford} style={{

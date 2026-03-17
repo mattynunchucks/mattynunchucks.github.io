@@ -225,7 +225,7 @@ export function applyTick(state, dt) {
 
   // ── Echo auto-generator (relic upgrade) ────────────────────────────────────
   const echoGenLevel  = state.echoGenLevel || 0;
-  const echoGenGain   = echoGenLevel * 0.1 * dt;
+  const echoGenGain   = echoGenLevel * 0.01 * dt;
   const echoes        = (state.echoes || 0) + echoGenGain;
   const totalEchoesEarned = (state.totalEchoesEarned || 0) + echoGenGain;
 

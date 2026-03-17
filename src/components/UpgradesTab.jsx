@@ -26,7 +26,7 @@ export default function UpgradesTab({
           PERMANENT BOOSTS —{" "}
           <span style={{ color: "#ff6b6b" }}>{fmt(state.amounts[0])} Quarks</span>
           {" · "}
-          <span style={{ color: "#c77dff" }}>{state.echoes} Echoes ✨</span>
+          <span style={{ color: "#c77dff" }}>{(state.echoes || 0).toFixed(2)} Echoes ✨</span>
         </span>
         <label style={{ display: "flex", alignItems: "center", gap: "5px", cursor: "pointer", whiteSpace: "nowrap", marginLeft: "12px" }}>
           <input type="checkbox" checked={showPurchased} onChange={e => setShowPurchased(e.target.checked)} style={{ accentColor: "#c77dff", cursor: "pointer" }} />

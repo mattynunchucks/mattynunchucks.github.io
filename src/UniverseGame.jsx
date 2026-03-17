@@ -384,7 +384,7 @@ export default function UniverseGame() {
         ...s,
         relics:      (s.relics || 0) - cost,
         echoGenLevel: newLevel,
-        log: [`💫 Echo Generator Lv.${newLevel} — +${(newLevel * 0.1).toFixed(1)} echoes/s`, ...s.log.slice(0, 49)],
+        log: [`💫 Echo Generator Lv.${newLevel} — +${(newLevel * 0.01).toFixed(2)} echoes/s`, ...s.log.slice(0, 49)],
       };
     });
   }, []);
@@ -721,7 +721,7 @@ export default function UniverseGame() {
           }}>— PRIMORDIUM —</div>
           {state.echoes > 0 && (
             <div style={{ fontSize: "0.52rem", color: "#c77dff88", marginTop: "2px", letterSpacing: "0.12em" }}>
-              ✨ {state.echoes} ECHOES · ×{pMult.toFixed(2)} PRODUCTION
+              ✨ {(state.echoes || 0).toFixed(2)} ECHOES · ×{pMult.toFixed(2)} PRODUCTION
             </div>
           )}
         </div>
