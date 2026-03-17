@@ -142,12 +142,14 @@ export const SCI_CORE_DISCOVERIES = [
     type: "sciTierMult", tier: 6, value: 2, deps: ["transistors"], desc: "Launch Facilities ×2" },
 
   // Space
-  { id: "satellites",     name: "Satellites",           era: "space",       cost: 20000000,
-    type: "echoBonus", value: 0.1, deps: [],                   desc: "+10% Echo gain per prestige" },
-  { id: "moon_landing",   name: "Moon Landing",          era: "space",       cost: 50000000,
-    type: "relicBonus", value: 1, deps: ["satellites"],        desc: "+1 Relic per Dark Age" },
-  { id: "space_station",  name: "Space Station",         era: "space",       cost: 100000000,
-    type: "paradigmReady", value: 1, deps: ["moon_landing"],   desc: "Enable Paradigm Shift" },
+  { id: "advanced_propulsion", name: "Advanced Propulsion", era: "space",   cost: 5000000,
+    type: "sciGlobal", value: 2,   deps: [],                              desc: "All Science ×2" },
+  { id: "satellites",     name: "Satellites",           era: "space",       cost: 12000000,
+    type: "echoBonus", value: 0.1, deps: ["advanced_propulsion"],          desc: "+10% Echo gain per prestige" },
+  { id: "moon_landing",   name: "Moon Landing",          era: "space",       cost: 30000000,
+    type: "relicBonus", value: 1, deps: ["satellites"],                    desc: "+1 Relic per Dark Age" },
+  { id: "space_station",  name: "Space Station",         era: "space",       cost: 60000000,
+    type: "paradigmReady", value: 1, deps: ["moon_landing"],               desc: "Enable Paradigm Shift" },
 ];
 
 // ── Wildcard pools (2 drawn per era at era start, +1 with extraWildcard) ──────
@@ -177,12 +179,12 @@ export const SCI_WILDCARD_POOLS = {
     { id: "wc_aerospace",   name: "Aerospace",         era: "modern",      cost: 1000000, type: "sciTierMult", tier: 6, value: 1.5, desc: "Launch Facilities ×1.5 (early)" },
   ],
   space: [
-    { id: "wc_mars",        name: "Mars Colony",       era: "space",       cost: 60000000,  type: "breakthroughMult", value: 2,   desc: "Breakthrough yield ×2" },
-    { id: "wc_mining",      name: "Space Mining",      era: "space",       cost: 70000000,  type: "relicBonus",       value: 1,   desc: "+1 Relic per Dark Age" },
-    { id: "wc_fusion",      name: "Fusion Power",      era: "space",       cost: 80000000,  type: "sciGlobal",        value: 3,   desc: "All Science ×3" },
-    { id: "wc_dyson",       name: "Dyson Swarm",       era: "space",       cost: 120000000, type: "universeMindMult", value: 3,   desc: "Mind production ×3" },
-    { id: "wc_ai",          name: "AI Research",       era: "space",       cost: 90000000,  type: "sciProd",          value: 5,   desc: "Science ×5" },
-    { id: "wc_genship",     name: "Generation Ship",   era: "space",       cost: 150000000, type: "echoMult",         value: 2,   desc: "Echo gain ×2" },
+    { id: "wc_mars",        name: "Mars Colony",       era: "space",       cost: 20000000,  type: "breakthroughMult", value: 2,   desc: "Breakthrough yield ×2" },
+    { id: "wc_mining",      name: "Space Mining",      era: "space",       cost: 22000000,  type: "relicBonus",       value: 1,   desc: "+1 Relic per Dark Age" },
+    { id: "wc_fusion",      name: "Fusion Power",      era: "space",       cost: 25000000,  type: "sciGlobal",        value: 3,   desc: "All Science ×3" },
+    { id: "wc_dyson",       name: "Dyson Swarm",       era: "space",       cost: 45000000,  type: "universeMindMult", value: 3,   desc: "Mind production ×3" },
+    { id: "wc_ai",          name: "AI Research",       era: "space",       cost: 30000000,  type: "sciProd",          value: 5,   desc: "Science ×5" },
+    { id: "wc_genship",     name: "Generation Ship",   era: "space",       cost: 55000000,  type: "echoMult",         value: 2,   desc: "Echo gain ×2" },
   ],
 };
 
