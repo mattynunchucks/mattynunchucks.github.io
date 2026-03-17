@@ -137,6 +137,8 @@ export function calcScienceBonuses(sciDiscoveries, sciPaths, paradigmShiftCount,
   for (const id of (purchasedInnovations || [])) {
     if (id === "theoretical_foundations") sciGlobal *= Math.pow(2, paradigmShiftCount || 0);
     if (id === "scientific_legacy")       extraWildcard += 1;
+    if (id === "open_archives")           discoveryCostMult *= 0.5;
+    if (id === "grand_unification")       sciGlobal *= 3;
   }
 
   // Breakthrough effects
@@ -147,6 +149,8 @@ export function calcScienceBonuses(sciDiscoveries, sciPaths, paradigmShiftCount,
     if (bt.type === "echoMult")     echoMult     *= bt.value;
     if (bt.type === "relicBonus")   relicBonus   += bt.value;
     if (bt.type === "sciProd")      sciProdMult  *= bt.value;
+    if (bt.type === "sciGlobal")    sciGlobal    *= bt.value;
+    if (bt.type === "sciTierMult")  sciTierMult[bt.tier] *= bt.value;
     if (bt.type === "sciShiftMult") sciGlobal    *= Math.pow(bt.value, paradigmShiftCount || 0);
   }
 

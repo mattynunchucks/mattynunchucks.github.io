@@ -188,11 +188,13 @@ export const SCI_WILDCARD_POOLS = {
 
 // ── Innovation upgrades (bought with Innovations, persist through Paradigm Shift) ──
 export const INNOVATION_UPGRADES = [
-  { id: "retained_research",       name: "Retained Research",       cost: 3,  icon: "📋", type: "retainPath",    desc: "Keep 1 path choice through Paradigm Shift" },
-  { id: "field_notes",             name: "Field Notes",              cost: 5,  icon: "📓", type: "freeDiscovery", desc: "Start each run with 1 free core Discovery purchased" },
-  { id: "paradigm_dividend",       name: "Paradigm Dividend",        cost: 7,  icon: "💡", type: "paradigmRelic", desc: "Each Paradigm Shift grants +1 Relic" },
-  { id: "scientific_legacy",       name: "Scientific Legacy",        cost: 10, icon: "🏛", type: "extraWildcard", desc: "Era wildcards offer 1 extra card to choose from" },
-  { id: "theoretical_foundations", name: "Theoretical Foundations",  cost: 15, icon: "📐", type: "sciShiftMult",  desc: "Science ×2 per Paradigm Shift completed" },
+  { id: "retained_research",       name: "Retained Research",       cost: 3,  icon: "📋", type: "retainPath",        desc: "Keep 1 path choice through Paradigm Shift" },
+  { id: "open_archives",           name: "Open Archives",           cost: 4,  icon: "🗄", type: "discoveryCostMult", desc: "All discovery costs −50%" },
+  { id: "field_notes",             name: "Field Notes",             cost: 5,  icon: "📓", type: "freeDiscovery",     desc: "Start each run with 1 free core Discovery purchased" },
+  { id: "paradigm_dividend",       name: "Paradigm Dividend",       cost: 7,  icon: "💡", type: "paradigmRelic",     desc: "Each Paradigm Shift grants +1 Relic" },
+  { id: "scientific_legacy",       name: "Scientific Legacy",       cost: 10, icon: "🏛", type: "extraWildcard",     desc: "Era wildcards offer 1 extra card to choose from" },
+  { id: "grand_unification",       name: "Grand Unification",       cost: 10, icon: "🌐", type: "sciGlobal",         desc: "All Science ×3" },
+  { id: "theoretical_foundations", name: "Theoretical Foundations", cost: 15, icon: "📐", type: "sciShiftMult",      desc: "Science ×2 per Paradigm Shift completed" },
 ];
 
 // ── Breakthrough upgrades (bought with Breakthroughs, permanent across everything) ──
@@ -201,8 +203,11 @@ export const BREAKTHROUGH_UPGRADES = [
   { id: "bt_echo2",   name: "Echo Amplification", cost: 3, icon: "✨", type: "echoMult",     value: 1.5, desc: "Echo gain ×1.5" },
   { id: "bt_relic1",  name: "Relic Attunement",   cost: 2, icon: "🏺", type: "relicBonus",   value: 1,   desc: "+1 Relic per Dark Age" },
   { id: "bt_relic2",  name: "Relic Mastery",      cost: 5, icon: "💎", type: "relicBonus",   value: 3,   desc: "+3 Relics per Dark Age" },
-  { id: "bt_sci1",    name: "Scientific Heritage", cost: 2, icon: "🔬", type: "sciProd",      value: 2,   desc: "Science production ×2" },
-  { id: "bt_sci2",    name: "Paradigm Legacy",     cost: 4, icon: "📐", type: "sciShiftMult", value: 2,   desc: "Science ×2 per Paradigm Shift" },
+  { id: "bt_sci1",    name: "Scientific Heritage",    cost: 2, icon: "🔬", type: "sciProd",      value: 2,   desc: "Science production ×2" },
+  { id: "bt_sci2",    name: "Paradigm Legacy",        cost: 4, icon: "📐", type: "sciShiftMult", value: 2,   desc: "Science ×2 per Paradigm Shift" },
+  { id: "bt_sci3",    name: "Empirical Methods",      cost: 3, icon: "📊", type: "sciGlobal",    value: 2,   desc: "All Science ×2" },
+  { id: "bt_launch1", name: "Orbital Infrastructure", cost: 4, icon: "🛰", type: "sciTierMult",  tier: 6, value: 4, desc: "Launch Facilities ×4" },
+  { id: "bt_sci4",    name: "Recursive Intelligence", cost: 6, icon: "🧬", type: "sciShiftMult", value: 3,   desc: "Science ×3 per Paradigm Shift" },
 ];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
