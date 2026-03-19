@@ -4,7 +4,7 @@ import { DISCOVERIES } from "../data/discoveries";
 import { CIV_TIERS, CIV_ERAS, CIV_BASE_RATE, CIV_POLICIES } from "../data/civilisation";
 import { SCI_TIERS, SCI_ERAS, SCI_BASE_RATE, SCI_WILDCARD_POOLS, sciEraIndex } from "../data/science";
 import { calcStats, prestigeMultiplier, calcCivMindBonus, calcCivBonuses, calcScienceBonuses } from "./stats";
-import { maxConverters, converterCost, civMaxConverters, civConverterCost, sciConverterCost, sciMaxConverters } from "./converters";
+import { maxConverters, converterCost, civMaxConverters, civConverterCost } from "./converters";
 
 export function applyTick(state, dt) {
   const { prodMult, globalMult, autobuyTiers, autoUpgrade, civAssemble, civAutoPolicy, civArchive, civProdBonus } = calcStats(
@@ -166,6 +166,30 @@ export function applyTick(state, dt) {
       const produced = sciConverters[i] * SCI_BASE_RATE * Math.pow(1.5, i) * tierMult * sciGlobal * prodMul * dt;
       sciAmounts[i] += produced;
       if (i === 0) sciProduced += produced;
+    }
+  }
+
+  // ── Auto-buy science converters (breakthrough upgrades) ──────────────────
+  const purchasedBTs = state.purchasedBreakthroughs || [];
+  if (state.sciUnlocked) {
+    if (purchasedBTs.includes("bt_auto1") || purchasedBTs.includes("bt_auto2")) {
+      let cost0 = Math.floor(50 * Math.pow(1.2, sciConverters[0]));
+      while (culture >= cost0) {
+        culture -= cost0;
+        sciConverters[0] += 1;
+        cost0 = Math.floor(50 * Math.pow(1.2, sciConverters[0]));
+      }
+    }
+    if (purchasedBTs.includes("bt_auto2")) {
+      for (let t = 1; t < SCI_TIERS.length; t++) {
+        const cap = sciConverters[t - 1];
+        let costT = Math.floor(100 * Math.pow(2, t - 1) * Math.pow(1.15, sciConverters[t]));
+        while (sciConverters[t] < cap && sciAmounts[t - 1] >= costT) {
+          sciAmounts[t - 1] -= costT;
+          sciConverters[t] += 1;
+          costT = Math.floor(100 * Math.pow(2, t - 1) * Math.pow(1.15, sciConverters[t]));
+        }
+      }
     }
   }
 

@@ -210,6 +210,8 @@ export const BREAKTHROUGH_UPGRADES = [
   { id: "bt_sci3",    name: "Empirical Methods",      cost: 3, icon: "📊", type: "sciGlobal",    value: 2,   desc: "All Science ×2" },
   { id: "bt_launch1", name: "Orbital Infrastructure", cost: 4, icon: "🛰", type: "sciTierMult",  tier: 6, value: 4, desc: "Launch Facilities ×4" },
   { id: "bt_sci4",    name: "Recursive Intelligence", cost: 6, icon: "🧬", type: "sciShiftMult", value: 3,   desc: "Science ×3 per Paradigm Shift" },
+  { id: "bt_auto1",  name: "Lab Automation",         cost: 3, icon: "🤖", type: "autoSci",                   desc: "Scholars are automatically recruited when affordable" },
+  { id: "bt_auto2",  name: "Industrial Automation",  cost: 7, icon: "⚙️", type: "autoSci",                   desc: "All science converters build themselves automatically" },
 ];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
