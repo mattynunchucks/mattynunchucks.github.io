@@ -185,7 +185,6 @@ function PrestigeModal({ plasma, stellarCores, onConfirm, onCancel }) {
 // ─── MAIN ─────────────────────────────────────────────────────────────────────
 export default function SpaceIdle() {
   // ── Load saved state once on mount
-  const [initDone, setInitDone] = useState(false);
   const [offlineBanner, setOfflineBanner] = useState(null); // ms offline
 
   const saved = useRef(loadGame());
@@ -217,7 +216,6 @@ export default function SpaceIdle() {
       const t = setTimeout(() => setOfflineBanner(null), 4000);
       return () => clearTimeout(t);
     }
-    setInitDone(true);
   }, []);
 
   // ── Collect current game state for saving
@@ -862,7 +860,7 @@ const S = {
   genList: { display: "flex", flexDirection: "column", gap: 10 },
   genCard: { background: C.panel, border: `1px solid ${C.border}`, borderRadius: 6, position: "relative", overflow: "hidden", transition: "border-color .2s" },
   genLocked: { opacity: 0.42 },
-  lockOverlay: { position: "absolute", inset: 0, zIndex: 10, background: "rgba(3,8,16,.78)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 6 },
+  lockOverlay: { position: "absolute", inset: 0, zIndex: 10, background: "rgba(3,8,16,.78)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 6, pointerEvents: "none" },
   lockText: { fontFamily: "'Share Tech Mono',monospace", fontSize: 11, color: C.textDim, letterSpacing: "0.15em" },
   cornerTL: { position: "absolute", top: 0, left: 0, width: 14, height: 14, borderTop: `2px solid ${C.cyanDim}`, borderLeft: `2px solid ${C.cyanDim}`, pointerEvents: "none" },
   cornerBR: { position: "absolute", bottom: 0, right: 0, width: 14, height: 14, borderBottom: `2px solid ${C.cyanDim}`, borderRight: `2px solid ${C.cyanDim}`, pointerEvents: "none" },
