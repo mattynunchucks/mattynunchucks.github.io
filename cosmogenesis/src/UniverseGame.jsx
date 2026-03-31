@@ -6,8 +6,7 @@ import { CIV_TIERS, CIV_UNLOCK_MINDS } from "./data/civilisation";
 import { RELIC_UPGRADES } from "./data/relicUpgrades";
 
 import { fmt, fmtTime } from "./utils/format";
-import { saveGame, loadGame, exportSaveFile, parseSaveFile } from "./utils/save";
-import { cloudPush, cloudPull, cloudDelete, getOrCreateToken, getToken, setToken } from "./game/cloudSave";
+import { saveGame, loadGame, exportSaveFile, parseSaveFile, SAVE_KEY } from "./utils/save"; // SAVE_KEY used in handleDeleteSave
 
 import { calcStats, prestigeMultiplier, calcEchoesFromRun, calcScienceBonuses } from "./game/stats";
 import { converterCost, maxConverters, civConverterCost, civMaxConverters } from "./game/converters";
@@ -49,13 +48,6 @@ function buildTheme(darkMode) {
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
-// Higher = more progress. Used to pick the better save when cloud and local diverge.
-function saveScore(s) {
-  return (s.darkAgesCount    || 0) * 1e9 +
-         (s.totalRelicsEarned || 0) * 1e6 +
-         (s.prestigeCount     || 0) * 1e4 +
-         Math.min(s.totalEchoesEarned || 0, 9999);
-}
 
 export default function UniverseGame() {
   const [state, setState] = useState(() => {
@@ -79,13 +71,9 @@ export default function UniverseGame() {
   const [showDeleteConfirm,   setShowDeleteConfirm]   = useState(false);
   const [loadStatus,          setLoadStatus]          = useState(null);
   const [simClickRate,        setSimClickRate]        = useState(2);
-  const [cloudStatus,         setCloudStatus]         = useState("idle"); // idle | syncing | saved | error
-  const [cloudLastSaved,      setCloudLastSaved]      = useState(null);
-  const [cloudToken,          setCloudToken]          = useState(() => getToken() || "");
 
   const stateRef = useRef(state);
   stateRef.current = state;
-  const lastCloudSaveRef = useRef(0);
 
   const { autopilot, setAutopilot, autopilotRunning, autopilotResults, autopilotProgress } =
     useAutopilot(simClickRate, UPGRADES);
@@ -97,57 +85,8 @@ export default function UniverseGame() {
   }, []);
 
   useEffect(() => {
-    const id = setInterval(() => {
-      saveGame(stateRef.current);
-      const now = Date.now();
-      if (now - lastCloudSaveRef.current > 60 * 1000) {
-        lastCloudSaveRef.current = now;
-        setCloudStatus("syncing");
-        cloudPush(exportSaveFile(stateRef.current), saveScore(stateRef.current))
-          .then(() => { setCloudStatus("saved"); setCloudLastSaved(new Date()); })
-          .catch(() => setCloudStatus("error"));
-      }
-    }, 5000);
+    const id = setInterval(() => saveGame(stateRef.current), 5000);
     return () => clearInterval(id);
-  }, []);
-
-  // ── Cloud save: push on page close ────────────────────────────────────────
-  useEffect(() => {
-    const handleUnload = () => {
-      const saveStr = exportSaveFile(stateRef.current);
-      navigator.sendBeacon
-        ? navigator.sendBeacon("/cosmogenesis/api/save.php", new Blob(
-            [JSON.stringify({ token: getToken(), save_data: saveStr, score: saveScore(stateRef.current) })],
-            { type: "application/json" }
-          ))
-        : cloudPush(saveStr, saveScore(stateRef.current)).catch(() => {});
-    };
-    window.addEventListener("beforeunload", handleUnload);
-    return () => window.removeEventListener("beforeunload", handleUnload);
-  }, []);
-
-  // ── Cloud save: startup load ───────────────────────────────────────────────
-  useEffect(() => {
-    const token = getOrCreateToken();
-    setCloudToken(token);
-    cloudPull(token).then(saveData => {
-      if (!saveData) return;
-      try {
-        const parsed = parseSaveFile(saveData);
-        // Only apply cloud save if it has more progress than the local save
-        if (saveScore(parsed) <= saveScore(stateRef.current)) return;
-        const offlineSecs = Math.min((Date.now() - (parsed.lastTick || Date.now())) / 1000, MAX_OFFLINE_SECS);
-        setState(() => {
-          const s = { ...buildInitState(), ...parsed, lastTick: Date.now(), offlineSeconds: 0 };
-          if (offlineSecs > 5) {
-            const after = applyTick(s, offlineSecs);
-            return { ...after, offlineSeconds: offlineSecs, log: [`⏱ Offline ${fmtTime(offlineSecs)} — resources accumulated`, ...after.log.slice(0, 49)] };
-          }
-          return s;
-        });
-      } catch {}
-    }).catch(() => {});
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ── Derived values ─────────────────────────────────────────────────────────
@@ -589,101 +528,36 @@ export default function UniverseGame() {
     });
     setShowPrestigeConfirm(false);
     setTab("game");
-    lastCloudSaveRef.current = 0; // force cloud sync on next 5s tick
   }, []);
 
-  const handleDeleteCloudSave = useCallback(() => {
-    cloudDelete(cloudToken)
-      .then(() => {
-        try { localStorage.removeItem("cosmo_universe_save"); } catch {}
-        setState(buildInitState());
-        const newToken = getOrCreateToken();
-        setCloudToken(newToken);
-        setCloudStatus("idle");
-        setCloudLastSaved(null);
-        lastCloudSaveRef.current = 0;
-        setShowDeleteConfirm(false);
-        setTab("game");
-      })
-      .catch(() => {
-        setLoadStatus({ ok: false, msg: "Could not delete cloud save" });
-        setShowDeleteConfirm(false);
-      });
-  }, [cloudToken]);
-
-  const cloudSyncNow = useCallback(() => {
-    setCloudStatus("syncing");
-    cloudPush(exportSaveFile(stateRef.current), saveScore(stateRef.current))
-      .then(() => { setCloudStatus("saved"); setCloudLastSaved(new Date()); lastCloudSaveRef.current = Date.now(); })
-      .catch(() => setCloudStatus("error"));
+  const handleDeleteSave = useCallback(() => {
+    try { localStorage.removeItem(SAVE_KEY); } catch {}
+    setState(buildInitState());
+    setShowDeleteConfirm(false);
+    setTab("game");
   }, []);
 
-  const applyParsed = useCallback((parsed) => {
-    const s = { ...buildInitState(), ...parsed, lastTick: Date.now(), offlineSeconds: 0 };
-    const offlineSecs = Math.min((Date.now() - (parsed.lastTick || Date.now())) / 1000, MAX_OFFLINE_SECS);
-    if (offlineSecs > 5) {
-      const after = applyTick(s, offlineSecs);
-      setState({ ...after, offlineSeconds: offlineSecs, log: [`⏱ Offline ${fmtTime(offlineSecs)} — resources accumulated`, ...after.log.slice(0, 49)] });
-    } else {
-      setState(s);
+  const handleExportSave = useCallback(() => {
+    const saveStr = exportSaveFile(stateRef.current);
+    navigator.clipboard.writeText(saveStr)
+      .then(() => setLoadStatus({ ok: true, msg: "Save copied to clipboard" }))
+      .catch(() => setLoadStatus({ ok: false, msg: "Clipboard unavailable — check browser permissions" }));
+  }, []);
+
+  const handleImportSave = useCallback((text) => {
+    try {
+      const parsed = parseSaveFile(text.trim());
+      const s = { ...buildInitState(), ...parsed, lastTick: Date.now(), offlineSeconds: 0 };
+      saveGame(s);
+      stateRef.current = s;
+      setState(() => s);
+      setLoadStatus({ ok: true, msg: "Save imported successfully" });
+    } catch (err) {
+      setLoadStatus({ ok: false, msg: `Import failed: ${err.message}` });
     }
-    saveGame(s);
   }, []);
 
-  const handleLinkToken = useCallback((token) => {
-    cloudPull(token).then(saveData => {
-      if (!saveData) { setLoadStatus({ ok: false, msg: "No save found for that token" }); return; }
-      try {
-        const parsed = parseSaveFile(saveData);
-        const offlineSecs = Math.min((Date.now() - (parsed.lastTick || Date.now())) / 1000, MAX_OFFLINE_SECS);
-        setState(() => {
-          const s = { ...buildInitState(), ...parsed, lastTick: Date.now(), offlineSeconds: 0 };
-          if (offlineSecs > 5) {
-            const after = applyTick(s, offlineSecs);
-            return { ...after, offlineSeconds: offlineSecs, log: [`⏱ Offline ${fmtTime(offlineSecs)} — resources accumulated`, ...after.log.slice(0, 49)] };
-          }
-          return s;
-        });
-        setToken(token);
-        setCloudToken(token);
-        lastCloudSaveRef.current = Date.now();
-        setCloudStatus("saved");
-        setCloudLastSaved(new Date());
-        setLoadStatus({ ok: true, msg: "Cloud save linked and loaded" });
-      } catch (err) {
-        setLoadStatus({ ok: false, msg: `Link failed: ${err.message}` });
-      }
-    }).catch(() => setLoadStatus({ ok: false, msg: "Could not reach save server" }));
-  }, [applyParsed]);
 
-  const cloudLoadNow = useCallback(() => {
-    setCloudStatus("syncing");
-    cloudPull(cloudToken).then(saveData => {
-      if (!saveData) { setCloudStatus("idle"); setLoadStatus({ ok: false, msg: "No cloud save found" }); return; }
-      try {
-        const parsed = parseSaveFile(saveData);
-        const offlineSecs = Math.min((Date.now() - (parsed.lastTick || Date.now())) / 1000, MAX_OFFLINE_SECS);
-        let s = { ...buildInitState(), ...parsed, lastTick: Date.now(), offlineSeconds: 0 };
-        if (offlineSecs > 5) {
-          const after = applyTick(s, offlineSecs);
-          s = { ...after, offlineSeconds: offlineSecs, log: [`⏱ Offline ${fmtTime(offlineSecs)} — resources accumulated`, ...after.log.slice(0, 49)] };
-        }
-        // Persist immediately so localStorage is never stale after a load
-        saveGame(s);
-        stateRef.current = s;
-        setState(() => s);
-        lastCloudSaveRef.current = Date.now();
-        setCloudStatus("saved");
-        setCloudLastSaved(new Date());
-        const da = s.darkAgesCount || 0;
-        const pc = s.prestigeCount || 0;
-        setLoadStatus({ ok: true, msg: `Cloud save loaded (${da} dark ages, ${pc} prestiges) [token: ${cloudToken.slice(0, 8)}]` });
-      } catch (err) {
-        setCloudStatus("error");
-        setLoadStatus({ ok: false, msg: `Load failed: ${err.message}` });
-      }
-    }).catch(() => { setCloudStatus("error"); setLoadStatus({ ok: false, msg: "Could not reach save server" }); });
-  }, [cloudToken]);
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
@@ -934,9 +808,7 @@ export default function UniverseGame() {
             simClickRate={simClickRate} setSimClickRate={setSimClickRate}
             loadStatus={loadStatus}
             onShowDeleteConfirm={() => setShowDeleteConfirm(true)}
-            cloudStatus={cloudStatus} cloudLastSaved={cloudLastSaved}
-            cloudToken={cloudToken} onCloudSyncNow={cloudSyncNow}
-            onCloudLoadNow={cloudLoadNow} onLinkToken={handleLinkToken}
+            onExportSave={handleExportSave} onImportSave={handleImportSave}
           />
         )}
 
@@ -948,7 +820,7 @@ export default function UniverseGame() {
       {/* Modals */}
       <DeleteConfirmModal
         show={showDeleteConfirm} theme={theme}
-        onConfirm={handleDeleteCloudSave}
+        onConfirm={handleDeleteSave}
         onCancel={() => setShowDeleteConfirm(false)}
       />
 

@@ -8,17 +8,10 @@ export default function SettingsTab({
   autopilot, setAutopilot, autopilotRunning, autopilotResults, autopilotProgress,
   simClickRate, setSimClickRate,
   loadStatus, onShowDeleteConfirm,
-  cloudStatus, cloudLastSaved, cloudToken, onCloudSyncNow, onCloudLoadNow, onLinkToken,
+  onExportSave, onImportSave,
 }) {
-  const [linkInput, setLinkInput] = useState("");
-  const [copied, setCopied] = useState(false);
+  const [importText, setImportText] = useState("");
 
-  function copyToken() {
-    navigator.clipboard.writeText(cloudToken).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
-  }
   return (
     <div style={{ maxWidth: "400px", margin: "0 auto" }}>
       <div style={{ fontSize: "0.65rem", color: theme.textDim, letterSpacing: "0.18em", marginBottom: "16px" }}>⚙ SETTINGS</div>
@@ -128,57 +121,31 @@ export default function SettingsTab({
         </div>
       </div>
 
-      {/* Cloud Save */}
+      {/* Save file */}
       <div style={{ marginBottom: "20px" }}>
-        <div style={{ fontSize: "0.65rem", color: theme.textDim, letterSpacing: "0.18em", marginBottom: "10px" }}>☁ CLOUD SAVE</div>
+        <div style={{ fontSize: "0.65rem", color: theme.textDim, letterSpacing: "0.18em", marginBottom: "10px" }}>💾 SAVE FILE</div>
         <div style={{ background: "#080c18", border: "1px solid #1a2a40", borderRadius: "6px", padding: "12px 14px", display: "flex", flexDirection: "column", gap: "10px" }}>
-
-          {/* Status row */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <div style={{ fontSize: "0.55rem", color: cloudStatus === "saved" ? "#6bcb77" : cloudStatus === "error" ? "#ff6b6b" : cloudStatus === "syncing" ? "#4d96ff" : theme.textFaint, letterSpacing: "0.1em" }}>
-              {cloudStatus === "syncing" && "⟳ SYNCING..."}
-              {cloudStatus === "saved"   && `✓ SYNCED${cloudLastSaved ? ` · ${cloudLastSaved.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}` : ""}`}
-              {cloudStatus === "error"   && "✗ SYNC FAILED"}
-              {cloudStatus === "idle"    && "AUTO-SYNCS EVERY 5 MINUTES"}
-            </div>
-            <div style={{ display: "flex", gap: "6px" }}>
-              <button onClick={onCloudLoadNow} disabled={cloudStatus === "syncing"}
-                style={{ background: "transparent", border: "1px solid #2a3a50", borderRadius: "4px", color: "#4a5a70", padding: "3px 10px", cursor: "pointer", fontSize: "0.52rem", fontFamily: "'Courier New', monospace" }}>
-                LOAD
-              </button>
-              <button onClick={onCloudSyncNow} disabled={cloudStatus === "syncing"}
-                style={{ background: "transparent", border: "1px solid #2a3a50", borderRadius: "4px", color: "#4a5a70", padding: "3px 10px", cursor: "pointer", fontSize: "0.52rem", fontFamily: "'Courier New', monospace" }}>
-                SAVE
-              </button>
-            </div>
-          </div>
-
-          {/* Token display */}
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <div style={{ flex: 1, fontSize: "0.48rem", color: theme.textFaint, fontFamily: "'Courier New', monospace", background: "#050810", border: "1px solid #1a2a40", borderRadius: "4px", padding: "5px 8px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-              {cloudToken || "—"}
-            </div>
-            <button onClick={copyToken}
-              style={{ background: copied ? "#6bcb7722" : "transparent", border: `1px solid ${copied ? "#6bcb77" : "#2a3a50"}`, borderRadius: "4px", color: copied ? "#6bcb77" : "#4a5a70", padding: "4px 10px", cursor: "pointer", fontSize: "0.5rem", fontFamily: "'Courier New', monospace", whiteSpace: "nowrap" }}>
-              {copied ? "COPIED" : "COPY"}
+          <div style={{ display: "flex", gap: "8px" }}>
+            <button onClick={onExportSave}
+              style={{ flex: 1, background: "transparent", border: "1px solid #2a3a50", borderRadius: "4px", color: "#4a5a70", padding: "7px 10px", cursor: "pointer", fontSize: "0.55rem", fontFamily: "'Courier New', monospace", letterSpacing: "0.1em" }}>
+              📋 COPY SAVE TO CLIPBOARD
             </button>
           </div>
-          <div style={{ fontSize: "0.48rem", color: theme.textFaint, lineHeight: 1.5 }}>
-            Save this token to restore your progress on another device.
+          <div style={{ fontSize: "0.52rem", color: theme.textFaint }}>
+            Paste a save string below to restore progress:
           </div>
-
-          {/* Link another device */}
-          <div style={{ borderTop: "1px solid #1a2a40", paddingTop: "10px", display: "flex", gap: "6px" }}>
+          <div style={{ display: "flex", gap: "6px" }}>
             <input
-              value={linkInput} onChange={e => setLinkInput(e.target.value)}
-              placeholder="Paste token to link another device…"
+              value={importText}
+              onChange={e => setImportText(e.target.value)}
+              placeholder="CGUv1:…"
               style={{ flex: 1, background: "#050810", border: "1px solid #1a2a40", borderRadius: "4px", color: theme.text, padding: "5px 8px", fontSize: "0.5rem", fontFamily: "'Courier New', monospace", outline: "none" }}
             />
             <button
-              onClick={() => { if (linkInput.trim()) { onLinkToken(linkInput.trim()); setLinkInput(""); } }}
-              disabled={!linkInput.trim()}
+              onClick={() => { if (importText.trim()) { onImportSave(importText); setImportText(""); } }}
+              disabled={!importText.trim()}
               style={{ background: "transparent", border: "1px solid #2a3a50", borderRadius: "4px", color: "#4a5a70", padding: "4px 10px", cursor: "pointer", fontSize: "0.5rem", fontFamily: "'Courier New', monospace" }}>
-              LINK
+              LOAD
             </button>
           </div>
         </div>
@@ -193,7 +160,7 @@ export default function SettingsTab({
         )}
         <button onClick={onShowDeleteConfirm} style={{ width: "100%", background: "#1a0808", border: "1px solid #ff6b6b88", borderRadius: "6px", color: "#ff6b6b", padding: "12px 20px", cursor: "pointer", fontSize: "0.65rem", letterSpacing: "0.14em", fontFamily: "'Courier New', monospace", textAlign: "left" }}>
           <div>🗑 DELETE SAVE</div>
-          <div style={{ fontSize: "0.52rem", color: "#ff6b6b88", marginTop: "3px" }}>Erase cloud save and reset all progress</div>
+          <div style={{ fontSize: "0.52rem", color: "#ff6b6b88", marginTop: "3px" }}>Erase local save and reset all progress</div>
         </button>
       </div>
 
